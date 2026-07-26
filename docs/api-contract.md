@@ -19,13 +19,16 @@ mantener este comportamiento salvo un cambio coordinado del contrato.
 
 ## Autenticacion
 
-Todos los endpoints de negocio bajo `/api/` requieren una sesion Auth.js de la
-cuenta Google cuyo correo verificado coincide con `AUTH_ALLOWED_EMAIL`. Las
-rutas internas `/api/auth/*` permanecen publicas para completar OAuth.
+Todos los endpoints de negocio bajo `/api/` requieren una sesion Auth.js de una
+cuenta Google cuyo correo verificado coincide, sin distinguir mayusculas, con
+alguna entrada de `AUTH_ALLOWED_EMAIL`. La variable contiene una lista separada
+por comas; se ignoran los espacios alrededor de cada entrada. La autenticacion
+queda cerrada si la lista esta vacia o contiene al menos una entrada invalida.
+Las rutas internas `/api/auth/*` permanecen publicas para completar OAuth.
 
 - `401`: no hay sesion o pertenece a otra cuenta.
-- `503`: faltan credenciales, secreto, correo permitido o URL base en el
-  entorno; ninguna operacion de negocio se ejecuta en este estado.
+- `503`: faltan credenciales, secreto, lista de correos permitidos o URL base
+  en el entorno; ninguna operacion de negocio se ejecuta en este estado.
 
 ## Tipos de respuesta
 

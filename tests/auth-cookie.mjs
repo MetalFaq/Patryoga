@@ -1,6 +1,23 @@
 import { encode } from "next-auth/jwt";
 
-export async function createAuthCookie(baseUrl, email = process.env.AUTH_ALLOWED_EMAIL) {
+export function getConfiguredAllowedEmails() {
+  const emails = (process.env.AUTH_ALLOWED_EMAIL ?? "")
+    .split(",")
+    .map((email) => email.trim())
+    .filter(Boolean);
+
+  if (emails.length === 0) {
+    throw new Error("API tests require at least one AUTH_ALLOWED_EMAIL entry.");
+  }
+
+  return emails;
+}
+
+export async function createAuthCookie(
+  baseUrl,
+  email = getConfiguredAllowedEmails()[0],
+  emailVerified = true
+) {
   const secret = process.env.AUTH_SECRET;
 
   if (!secret || secret.length < 32 || !email) {
@@ -18,6 +35,7 @@ export async function createAuthCookie(baseUrl, email = process.env.AUTH_ALLOWED
     secret,
     token: {
       email,
+      googleEmailVerified: emailVerified,
       name: "Patryoga API tests",
       sub: "patryoga-api-tests"
     }

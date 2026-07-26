@@ -1,8 +1,15 @@
 # Pruebas de contrato de API
 
-Las suites usan las APIs nativas de Node.js y `next-auth/jwt` para crear una
-sesion local firmada. Con PostgreSQL y Next.js levantados usando las mismas
-`AUTH_SECRET` y `AUTH_ALLOWED_EMAIL`, ejecutar desde la raiz:
+La validacion de la configuracion de autenticacion no necesita servicios
+levantados. Ejecutar desde la raiz:
+
+```bash
+node --test tests/auth-environment.test.mjs
+```
+
+La prueba de acceso usa las APIs nativas de Node.js y `next-auth/jwt` para crear
+sesiones locales firmadas. Con Next.js levantado usando los mismos `AUTH_SECRET`
+y `AUTH_ALLOWED_EMAIL`, ejecutar:
 
 ```bash
 node --test tests/auth-access.test.mjs
@@ -43,7 +50,8 @@ Variables opcionales:
 Variables requeridas:
 
 - `AUTH_SECRET`: el mismo valor de 32 o mas caracteres usado por la app.
-- `AUTH_ALLOWED_EMAIL`: el mismo correo configurado en la app.
+- `AUTH_ALLOWED_EMAIL`: la misma lista de correos separados por comas
+  configurada en la app. La prueba de acceso comprueba cada cuenta de la lista.
 
 La cookie de prueba existe solamente en el proceso de la suite. No hay un modo
 de bypass ni una credencial fija dentro de la aplicacion.

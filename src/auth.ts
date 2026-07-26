@@ -49,7 +49,15 @@ export const { auth, handlers, signIn, signOut } = NextAuth(() => {
           return Response.redirect(loginUrl);
         }
 
-        if (isAllowedAdminEmail(session?.user?.email)) return true;
+        const verifiedUser = session?.user as
+          | { email?: string | null; googleEmailVerified?: boolean }
+          | undefined;
+        if (
+          verifiedUser?.googleEmailVerified === true
+          && isAllowedAdminEmail(verifiedUser.email)
+        ) {
+          return true;
+        }
         if (pathname.startsWith("/api/")) {
           return Response.json(
             { error: "Authentication required" },
@@ -68,6 +76,26 @@ export const { auth, handlers, signIn, signOut } = NextAuth(() => {
 
         return googleProfile?.email_verified === true
           && isAllowedAdminEmail(googleProfile.email);
+      },
+      jwt({ token, account, profile }) {
+        if (account?.provider === "google") {
+          const googleProfile = profile as
+            | { email_verified?: boolean }
+            | undefined;
+          token.googleEmailVerified = googleProfile?.email_verified === true;
+        }
+
+        return token;
+      },
+      session({ session, token }) {
+        if (session.user) {
+          const verifiedUser = session.user as typeof session.user & {
+            googleEmailVerified?: boolean;
+          };
+          verifiedUser.googleEmailVerified = token.googleEmailVerified === true;
+        }
+
+        return session;
       }
     }
   };

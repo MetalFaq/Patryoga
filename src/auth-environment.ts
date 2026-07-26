@@ -1,7 +1,7 @@
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export type AuthEnvironment = {
-  allowedEmail: string;
+  allowedEmails: string[];
   googleId: string;
   googleSecret: string;
   issues: string[];
@@ -15,11 +15,23 @@ function read(name: string) {
   return process.env[name]?.trim() ?? "";
 }
 
+export function parseAllowedAdminEmails(value: string | undefined) {
+  const emails = (value ?? "")
+    .split(",")
+    .map((email) => email.trim().toLowerCase());
+
+  if (emails.length === 0 || emails.some((email) => !emailPattern.test(email))) {
+    return null;
+  }
+
+  return [...new Set(emails)];
+}
+
 export function getAuthEnvironment(): AuthEnvironment {
   const secret = read("AUTH_SECRET");
   const googleId = read("AUTH_GOOGLE_ID");
   const googleSecret = read("AUTH_GOOGLE_SECRET");
-  const allowedEmail = read("AUTH_ALLOWED_EMAIL").toLowerCase();
+  const allowedEmails = parseAllowedAdminEmails(process.env.AUTH_ALLOWED_EMAIL);
   const trustHost = read("AUTH_TRUST_HOST").toLowerCase() === "true";
   const url = read("AUTH_URL");
   const issues: string[] = [];
@@ -27,7 +39,7 @@ export function getAuthEnvironment(): AuthEnvironment {
   if (secret.length < 32) issues.push("AUTH_SECRET");
   if (!googleId) issues.push("AUTH_GOOGLE_ID");
   if (!googleSecret) issues.push("AUTH_GOOGLE_SECRET");
-  if (!emailPattern.test(allowedEmail)) issues.push("AUTH_ALLOWED_EMAIL");
+  if (!allowedEmails) issues.push("AUTH_ALLOWED_EMAIL");
   if (!trustHost) issues.push("AUTH_TRUST_HOST");
   try {
     const parsedUrl = new URL(url);
@@ -37,7 +49,7 @@ export function getAuthEnvironment(): AuthEnvironment {
   }
 
   return {
-    allowedEmail,
+    allowedEmails: allowedEmails ?? [],
     googleId,
     googleSecret,
     issues,
@@ -50,5 +62,8 @@ export function getAuthEnvironment(): AuthEnvironment {
 
 export function isAllowedAdminEmail(email: string | null | undefined) {
   const environment = getAuthEnvironment();
-  return environment.ready && email?.trim().toLowerCase() === environment.allowedEmail;
+  const normalizedEmail = email?.trim().toLowerCase();
+  return environment.ready
+    && normalizedEmail !== undefined
+    && environment.allowedEmails.includes(normalizedEmail);
 }

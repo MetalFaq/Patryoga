@@ -9,7 +9,8 @@ salon de yoga.
 - Interfaz responsive con foco movil para agenda y administracion.
 - CRUD de alumnas, clases semanales, asignaciones y asistencia historica.
 - Persistencia PostgreSQL y ejecucion local con Docker Compose.
-- Autenticacion Google con una unica cuenta administradora autorizada.
+- Autenticacion Google con una lista acotada de cuentas administradoras
+  autorizadas.
 
 ## Requisitos
 
@@ -35,15 +36,18 @@ AUTH_URL=http://localhost:3000
   con `npm exec auth secret`; no debe reutilizarse fuera de esta aplicacion.
 - `AUTH_GOOGLE_ID` y `AUTH_GOOGLE_SECRET`: credenciales del cliente web creado
   en Google Cloud Console.
-- `AUTH_ALLOWED_EMAIL`: correo Google exacto de la unica administradora.
+- `AUTH_ALLOWED_EMAIL`: lista de correos Google autorizados, separada por comas.
+  Los espacios alrededor de cada entrada se ignoran.
 - `AUTH_TRUST_HOST=true`: requerido por Auth.js en esta ejecucion Docker.
 - `AUTH_URL`: origen publico de la app, sin barra final. En local se usa
   `http://localhost:3000`; al desplegar debe cambiarse al origen HTTPS real.
 
 La aplicacion valida que Google haya verificado el correo y que coincida, sin
-distinguir mayusculas, con `AUTH_ALLOWED_EMAIL`. Cualquier otra cuenta es
-rechazada. Si falta una variable, las paginas redirigen a `/login`, las APIs
-responden `503` y el inicio de sesion queda deshabilitado.
+distinguir mayusculas, con alguna entrada de `AUTH_ALLOWED_EMAIL`. Cualquier
+otra cuenta es rechazada. La configuracion tambien se rechaza por completo si
+la lista esta vacia o si alguna entrada no es un correo valido. Si falta una
+variable o la configuracion es invalida, las paginas redirigen a `/login`, las
+APIs responden `503` y el inicio de sesion queda deshabilitado.
 
 En el cliente OAuth de Google registrar para desarrollo:
 
