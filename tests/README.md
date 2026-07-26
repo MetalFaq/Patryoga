@@ -7,6 +7,24 @@ La suite usa únicamente las APIs nativas de Node.js y no requiere cambios en
 node --test tests/api-contract.test.mjs
 ```
 
+Para ejecutar las pruebas de gestión:
+
+```bash
+node --test tests/management-api.test.mjs
+```
+
+La prueba de reejecución de `db/init.sql` está omitida por defecto porque
+requiere Docker Compose y ejecuta `psql` dentro del contenedor de PostgreSQL.
+Con los servicios levantados, habilitarla así:
+
+```bash
+RUN_SEED_TEST=1 node --test tests/management-api.test.mjs
+```
+
+En PowerShell, usar `$env:RUN_SEED_TEST = "1"` antes del comando. Los datos de
+prueba usan identificadores únicos; al terminar, las entidades creadas quedan
+archivadas para no eliminar historial.
+
 Variables opcionales:
 
 - `BASE_URL`: URL de la aplicación (por defecto `http://localhost:3000`).
