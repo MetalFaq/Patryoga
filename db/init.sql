@@ -21,13 +21,13 @@ ALTER TABLE students ADD COLUMN IF NOT EXISTS active BOOLEAN NOT NULL DEFAULT tr
 CREATE TABLE IF NOT EXISTS weekly_classes (
   id TEXT PRIMARY KEY,
   title TEXT NOT NULL,
-  weekday TEXT NOT NULL CHECK (
-    weekday IN ('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday')
+  weekday TEXT NOT NULL CONSTRAINT weekly_classes_weekday_check CHECK (
+    weekday IN ('monday', 'tuesday', 'wednesday', 'thursday', 'friday')
   ),
   start_time TIME NOT NULL,
   duration_minutes INTEGER NOT NULL CHECK (duration_minutes > 0),
-  teacher TEXT NOT NULL,
-  room TEXT NOT NULL,
+  teacher TEXT NOT NULL DEFAULT 'Patricia',
+  room TEXT NOT NULL DEFAULT 'Sala unica',
   capacity INTEGER NOT NULL CHECK (capacity > 0),
   active BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS class_enrollments (
   active_from DATE NOT NULL DEFAULT '-infinity',
   active_until DATE,
   position SMALLINT NOT NULL CHECK (position > 0),
-  PRIMARY KEY (class_id, student_id),
+  PRIMARY KEY (class_id, student_id, active_from),
   UNIQUE (class_id, position),
   CHECK (active_until IS NULL OR active_until >= active_from)
 );
@@ -51,10 +51,68 @@ CREATE TABLE IF NOT EXISTS attendance_records (
   status attendance_status NOT NULL DEFAULT 'unmarked',
   marked_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   PRIMARY KEY (class_id, student_id, session_date),
-  FOREIGN KEY (class_id, student_id)
-    REFERENCES class_enrollments(class_id, student_id)
-    ON DELETE RESTRICT
+  CONSTRAINT attendance_records_class_fk
+    FOREIGN KEY (class_id) REFERENCES weekly_classes(id) ON DELETE RESTRICT,
+  CONSTRAINT attendance_records_student_fk
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE RESTRICT
 );
+
+-- Upgrade databases created with the initial single-period enrollment model.
+-- Historical Saturday templates remain readable, but the NOT VALID constraint
+-- rejects any new Saturday class without rewriting past records.
+ALTER TABLE weekly_classes
+  ALTER COLUMN teacher SET DEFAULT 'Patricia',
+  ALTER COLUMN room SET DEFAULT 'Sala unica';
+
+UPDATE weekly_classes
+SET teacher = 'Patricia', room = 'Sala unica'
+WHERE active;
+
+UPDATE weekly_classes
+SET active = false
+WHERE active AND weekday = 'saturday';
+
+ALTER TABLE weekly_classes
+  DROP CONSTRAINT IF EXISTS weekly_classes_weekday_check;
+ALTER TABLE weekly_classes
+  ADD CONSTRAINT weekly_classes_weekday_check
+  CHECK (weekday IN ('monday', 'tuesday', 'wednesday', 'thursday', 'friday'))
+  NOT VALID;
+
+ALTER TABLE attendance_records
+  DROP CONSTRAINT IF EXISTS attendance_records_class_id_student_id_fkey;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'attendance_records_class_fk'
+      AND conrelid = 'attendance_records'::regclass
+  ) THEN
+    ALTER TABLE attendance_records
+      ADD CONSTRAINT attendance_records_class_fk
+      FOREIGN KEY (class_id) REFERENCES weekly_classes(id) ON DELETE RESTRICT;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'attendance_records_student_fk'
+      AND conrelid = 'attendance_records'::regclass
+  ) THEN
+    ALTER TABLE attendance_records
+      ADD CONSTRAINT attendance_records_student_fk
+      FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE RESTRICT;
+  END IF;
+END $$;
+
+ALTER TABLE class_enrollments
+  DROP CONSTRAINT IF EXISTS class_enrollments_pkey;
+ALTER TABLE class_enrollments
+  ADD PRIMARY KEY (class_id, student_id, active_from);
+
+CREATE UNIQUE INDEX IF NOT EXISTS class_enrollments_one_active_period_idx
+  ON class_enrollments (class_id, student_id)
+  WHERE active_until IS NULL;
 
 CREATE INDEX IF NOT EXISTS attendance_records_session_idx
   ON attendance_records (session_date, class_id);
@@ -80,10 +138,10 @@ INSERT INTO weekly_classes (
   room,
   capacity
 ) VALUES
-  ('class-lun-0830', 'Yoga suave', 'monday', '08:30', 60, 'Silvia', 'Sala calma', 8),
-  ('class-mar-1830', 'Hatha integral', 'tuesday', '18:30', 75, 'Silvia', 'Sala sol', 10),
-  ('class-jue-1000', 'Movilidad y respiracion', 'thursday', '10:00', 60, 'Silvia', 'Sala calma', 8),
-  ('class-sab-0930', 'Practica semanal', 'saturday', '09:30', 90, 'Silvia', 'Sala sol', 12)
+  ('class-lun-0830', 'Yoga suave', 'monday', '08:30', 60, 'Patricia', 'Sala unica', 8),
+  ('class-mar-1830', 'Hatha integral', 'tuesday', '18:30', 75, 'Patricia', 'Sala unica', 10),
+  ('class-jue-1000', 'Movilidad y respiracion', 'thursday', '10:00', 60, 'Patricia', 'Sala unica', 8),
+  ('class-vie-0930', 'Practica semanal', 'friday', '09:30', 90, 'Patricia', 'Sala unica', 12)
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO class_enrollments (class_id, student_id, active_from, position) VALUES
@@ -99,11 +157,11 @@ INSERT INTO class_enrollments (class_id, student_id, active_from, position) VALU
   ('class-jue-1000', 'stu-clara', '-infinity', 2),
   ('class-jue-1000', 'stu-marta', '-infinity', 3),
   ('class-jue-1000', 'stu-nora', '-infinity', 4),
-  ('class-sab-0930', 'stu-elena', '-infinity', 1),
-  ('class-sab-0930', 'stu-lucia', '-infinity', 2),
-  ('class-sab-0930', 'stu-paula', '-infinity', 3),
-  ('class-sab-0930', 'stu-ines', '-infinity', 4)
-ON CONFLICT (class_id, student_id) DO NOTHING;
+  ('class-vie-0930', 'stu-elena', '-infinity', 1),
+  ('class-vie-0930', 'stu-lucia', '-infinity', 2),
+  ('class-vie-0930', 'stu-paula', '-infinity', 3),
+  ('class-vie-0930', 'stu-ines', '-infinity', 4)
+ON CONFLICT (class_id, student_id, active_from) DO NOTHING;
 
 INSERT INTO attendance_records (class_id, student_id, session_date, status) VALUES
   ('class-lun-0830', 'stu-ana', '2026-07-20', 'present'),
@@ -112,7 +170,7 @@ INSERT INTO attendance_records (class_id, student_id, session_date, status) VALU
   ('class-mar-1830', 'stu-clara', '2026-07-21', 'present'),
   ('class-mar-1830', 'stu-lucia', '2026-07-21', 'present'),
   ('class-jue-1000', 'stu-nora', '2026-07-23', 'absent'),
-  ('class-sab-0930', 'stu-paula', '2026-07-25', 'present')
+  ('class-vie-0930', 'stu-paula', '2026-07-24', 'present')
 ON CONFLICT (class_id, student_id, session_date) DO NOTHING;
 
 COMMIT;

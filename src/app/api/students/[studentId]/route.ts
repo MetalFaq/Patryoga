@@ -15,8 +15,9 @@ async function bodyOf(request: Request): Promise<Record<string, unknown> | NextR
 export async function PATCH(request: Request, context: Context) {
   const { studentId } = await context.params; const body = await bodyOf(request);
   if (body instanceof NextResponse) return body;
-  if ((body.name !== undefined && (typeof body.name !== "string" || !body.name.trim())) || (body.phone !== undefined && (typeof body.phone !== "string" || !body.phone.trim())) || (body.notes !== undefined && typeof body.notes !== "string")) return NextResponse.json({ error: "invalid student fields" }, { status: 400 });
-  try { return NextResponse.json({ dataSource: "runtime", student: await updateStudent(studentId, { ...(typeof body.name === "string" ? { name: body.name.trim() } : {}), ...(typeof body.phone === "string" ? { phone: body.phone.trim() } : {}), ...(typeof body.notes === "string" ? { notes: body.notes } : {}) }) }); }
+  const hasEditableField = ["name", "phone", "notes", "active"].some((field) => body[field] !== undefined);
+  if (!hasEditableField || (body.name !== undefined && (typeof body.name !== "string" || !body.name.trim())) || (body.phone !== undefined && (typeof body.phone !== "string" || !body.phone.trim())) || (body.notes !== undefined && typeof body.notes !== "string") || (body.active !== undefined && body.active !== true)) return NextResponse.json({ error: "invalid student fields" }, { status: 400 });
+  try { return NextResponse.json({ dataSource: "runtime", student: await updateStudent(studentId, { ...(typeof body.name === "string" ? { name: body.name.trim() } : {}), ...(typeof body.phone === "string" ? { phone: body.phone.trim() } : {}), ...(typeof body.notes === "string" ? { notes: body.notes } : {}) }, body.active === true) }); }
   catch (error) { if (error instanceof StudentNotFoundError) return NextResponse.json({ error: "student not found" }, { status: 404 }); throw error; }
 }
 

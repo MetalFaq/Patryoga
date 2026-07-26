@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import {
   CapacityExceededError,
-  ClassAlreadyArchivedError,
+  ClassInactiveError,
   ClassNotFoundError,
-  EnrollmentReactivationUnsupportedError,
   setStudentClasses,
   StudentNotFoundError
 } from "@/server/yoga-repository";
@@ -27,9 +26,8 @@ async function respond(request: Request, context: Context, assign: boolean) {
   catch (error) {
     if (error instanceof StudentNotFoundError) return NextResponse.json({ error: "student not found or archived" }, { status: 404 });
     if (error instanceof ClassNotFoundError) return NextResponse.json({ error: "class not found" }, { status: 404 });
-    if (error instanceof ClassAlreadyArchivedError) return NextResponse.json({ error: "cannot assign an archived class" }, { status: 409 });
+    if (error instanceof ClassInactiveError) return NextResponse.json({ error: "cannot assign a class that is no longer active" }, { status: 409 });
     if (error instanceof CapacityExceededError) return NextResponse.json({ error: "class capacity exceeded" }, { status: 409 });
-    if (error instanceof EnrollmentReactivationUnsupportedError) return NextResponse.json({ error: "assignment reactivation requires a new validity period" }, { status: 409 });
     throw error;
   }
 }
