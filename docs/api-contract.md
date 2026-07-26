@@ -12,6 +12,10 @@ mantener este comportamiento salvo un cambio coordinado del contrato.
 - Errores: `{ "error": "descripcion" }` con un estado HTTP adecuado.
 - Estados de asistencia: `present`, `absent` o `unmarked`.
 - `dataSource` es informativo durante la transicion desde mocks.
+- Las plantillas activas solo admiten dias de lunes a viernes.
+- La profesora y la sala son valores fijos del servidor: `Patricia` y
+  `Sala unica`. Los clientes no deben solicitarlos ni enviarlos al crear o
+  editar una clase.
 
 ## Autenticacion
 
@@ -53,9 +57,16 @@ type ClassSession = WeeklyClass & {
 };
 ```
 
+`saturday` solo puede aparecer al consultar historial heredado de una plantilla
+ya inactiva. Las altas y ediciones aceptan exclusivamente `monday` a `friday`.
+
 ## `GET /api/classes`
 
 Devuelve las sesiones de una semana.
+
+La agenda contiene solo plantillas activas de lunes a viernes. Cada sesion
+incluye exclusivamente las alumnas cuyo periodo de asignacion cubre la fecha de
+esa sesion; un reingreso no vuelve a agregar horarios de periodos anteriores.
 
 Consulta opcional:
 
@@ -104,7 +115,11 @@ opcionales. Si no se envia `id`, el servidor genera uno.
 
 ### `PATCH /api/students/:studentId`
 
-Actualiza de forma parcial `name`, `phone` o `notes`.
+Actualiza de forma parcial `name`, `phone` o `notes`. Tambien acepta
+`{ "active": true }` para reingresar una alumna archivada conservando su misma
+identidad y todo su historial. El reingreso no reactiva asignaciones cerradas;
+los nuevos horarios se asignan mediante
+`POST /api/students/:studentId/classes`.
 
 - `200`: `{ "dataSource": "runtime", "student": Student }`.
 - `400`: cuerpo o campos invalidos.
@@ -123,27 +138,40 @@ asignaciones activas con la fecha actual.
 ### `POST /api/classes`
 
 Crea una plantilla semanal. Requiere `title`, `weekday`, `time`,
-`durationMinutes`, `teacher`, `room` y `capacity`; `id` es opcional.
+`durationMinutes` y `capacity`; `id` es opcional. `weekday` debe ser un dia de
+lunes a viernes. El servidor completa `teacher: "Patricia"` y
+`room: "Sala unica"`.
 
 - `201`: `{ "dataSource": "runtime", "class": { ... } }`.
 - `400`: cuerpo, horario, dia o campos numericos invalidos.
-- `409`: el identificador ya existe.
+- `409`: el identificador ya existe o el horario se solapa con otra plantilla
+  activa del mismo dia. El mensaje identifica la clase conflictiva.
 
 ### `PATCH /api/classes/:classId`
 
-Actualiza al menos uno de los campos editables de la plantilla. Reducir el cupo
-por debajo de las asignaciones activas se rechaza de forma transaccional.
+Actualiza al menos uno de `title`, `weekday`, `time`, `durationMinutes` o
+`capacity`. `teacher` y `room` no son editables. Reducir el cupo por debajo de
+las asignaciones activas o mover la plantilla a un horario solapado se rechaza
+de forma transaccional sin aplicar cambios parciales.
 
 - `200`: `{ "dataSource": "runtime", "message": "Class updated" }`.
 - `400`: no hay campos editables o algun campo es invalido.
 - `404`: la clase no existe.
-- `409`: el nuevo cupo es menor que las asignaciones activas.
+- `409`: el nuevo cupo es menor que las asignaciones activas o el horario se
+  solapa con otra plantilla activa. En este ultimo caso el mensaje identifica
+  la clase conflictiva.
 
 ### `DELETE /api/classes/:classId`
 
-Archiva la plantilla sin borrar asignaciones ni asistencias historicas.
+Elimina la plantilla de la operacion habitual:
 
-- `204`: archivado aplicado de forma idempotente.
+- si no tiene asistencias guardadas, borra definitivamente la plantilla y sus
+  asignaciones;
+- si tiene al menos una asistencia, la deja inactiva, cierra sus asignaciones
+  vigentes y conserva la plantilla, las asignaciones y asistencias necesarias
+  para consultar el historial.
+
+- `204`: eliminacion o retiro de agenda aplicado.
 - `404`: la clase no existe.
 
 ## Gestion de asignaciones
@@ -163,12 +191,14 @@ unicos y no puede estar vacio.
 - `200`: `{ "dataSource": "runtime", "message": "...", "classIds": [] }`.
 - `400`: cuerpo o `classIds` invalidos.
 - `404`: alumna inexistente/archivada o clase inexistente.
-- `409`: clase archivada, cupo agotado o intento de reactivar una asignacion
-  cerrada sin crear un nuevo periodo de vigencia.
+- `409`: clase inactiva o cupo agotado.
 
 Asignar otra vez una relacion que ya esta activa es idempotente. Cerrar una
-relacion inexistente o ya cerrada no modifica historial. Hasta definir el modelo
-de reingresos, una asignacion cerrada no se puede reactivar.
+relacion inexistente o ya cerrada no modifica historial. Asignar nuevamente una
+relacion cerrada crea un periodo de vigencia nuevo; nunca reabre ni reescribe el
+periodo anterior. Toda la operacion conserva atomicidad cuando incluye varias
+clases. Si un periodo nuevo todavia no entro en vigencia, una baja inmediata lo
+cancela sin alterar ningun periodo historico efectivo.
 
 ## `GET /api/classes/:classId/attendance`
 
@@ -232,6 +262,8 @@ Validaciones:
 - `date` debe ser una fecha ISO valida.
 - `attendance` debe ser un arreglo; puede estar vacio como operacion sin cambios.
 - Cada alumna debe estar asignada a la clase.
+- El periodo de asignacion debe incluir la fecha indicada; una asignacion actual
+  no autoriza a cargar asistencia en fechas anteriores a su alta.
 - Cada estado debe pertenecer al conjunto permitido.
 - Una alumna no puede repetirse dentro de la misma solicitud.
 - La solicitud se valida completa antes de guardar cualquier entrada.

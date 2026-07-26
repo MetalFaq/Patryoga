@@ -175,7 +175,19 @@ export async function archiveStudent(studentId: string): Promise<void> {
     await client.query("BEGIN");
     const result = await client.query("UPDATE students SET active = false WHERE id = $1", [studentId]);
     if (result.rowCount === 0) throw new StudentNotFoundError();
-    await client.query("UPDATE class_enrollments SET active_until = CURRENT_DATE WHERE student_id = $1 AND active_until IS NULL", [studentId]);
+    await client.query(`
+      DELETE FROM class_enrollments
+      WHERE student_id = $1
+        AND active_until IS NULL
+        AND active_from > CURRENT_DATE
+    `, [studentId]);
+    await client.query(`
+      UPDATE class_enrollments
+      SET active_until = CURRENT_DATE
+      WHERE student_id = $1
+        AND active_until IS NULL
+        AND active_from <= CURRENT_DATE
+    `, [studentId]);
     await client.query("COMMIT");
   } catch (error) { await client.query("ROLLBACK"); throw error; } finally { client.release(); }
 }
@@ -314,9 +326,17 @@ export async function deleteClass(classId: string): Promise<void> {
     if (history.rows[0]?.exists) {
       await client.query("UPDATE weekly_classes SET active = false WHERE id = $1", [classId]);
       await client.query(`
+        DELETE FROM class_enrollments
+        WHERE class_id = $1
+          AND active_until IS NULL
+          AND active_from > CURRENT_DATE
+      `, [classId]);
+      await client.query(`
         UPDATE class_enrollments
         SET active_until = CURRENT_DATE
-        WHERE class_id = $1 AND active_until IS NULL
+        WHERE class_id = $1
+          AND active_until IS NULL
+          AND active_from <= CURRENT_DATE
       `, [classId]);
     } else {
       await client.query("DELETE FROM class_enrollments WHERE class_id = $1", [classId]);
@@ -374,7 +394,23 @@ export async function setStudentClasses(studentId: string, classIds: string[], a
             ) VALUES ($1, $2, $3, $4)
           `, [classId, studentId, validity.rows[0].active_from, position.rows[0].position]);
         }
-      } else await client.query("UPDATE class_enrollments SET active_until = CURRENT_DATE WHERE class_id = $1 AND student_id = $2 AND active_until IS NULL", [classId, studentId]);
+      } else {
+        await client.query(`
+          DELETE FROM class_enrollments
+          WHERE class_id = $1
+            AND student_id = $2
+            AND active_until IS NULL
+            AND active_from > CURRENT_DATE
+        `, [classId, studentId]);
+        await client.query(`
+          UPDATE class_enrollments
+          SET active_until = CURRENT_DATE
+          WHERE class_id = $1
+            AND student_id = $2
+            AND active_until IS NULL
+            AND active_from <= CURRENT_DATE
+        `, [classId, studentId]);
+      }
     }
     await client.query("COMMIT");
   } catch (error) { await client.query("ROLLBACK"); throw error; } finally { client.release(); }
