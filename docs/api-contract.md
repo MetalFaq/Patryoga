@@ -88,7 +88,13 @@ Errores:
 
 ## `GET /api/students`
 
-Devuelve el catalogo de alumnas.
+Devuelve un catalogo de alumnas separado por estado.
+
+Consulta opcional:
+
+- `status`: acepta exactamente `active` o `archived`. Si se omite, el valor
+  predeterminado es `active`. El parametro no puede repetirse, ni siquiera con
+  el mismo valor.
 
 Respuesta `200`:
 
@@ -99,8 +105,15 @@ Respuesta `200`:
 }
 ```
 
-La lista contiene solamente alumnas activas. Las alumnas archivadas siguen en
-la base para preservar historial, pero no aparecen en este catalogo operativo.
+`status=active` contiene solamente alumnas activas y `status=archived`
+solamente alumnas archivadas; no existe una vista combinada. Las alumnas
+archivadas siguen en la base para preservar historial y solo aparecen cuando se
+solicita ese estado de forma explicita.
+
+Errores:
+
+- `400`: `status` esta repetido, vacio o tiene un valor distinto de `active` o
+  `archived`.
 
 ## Gestion de alumnas
 
@@ -282,3 +295,12 @@ solicitud identica produce el mismo estado final.
 El `POST` es parcial: las alumnas omitidas conservan su estado anterior. Con la
 implementacion futura en PostgreSQL, todas las entradas de una solicitud deben
 guardarse en una sola transaccion y conservar esta semantica de upsert.
+
+## Nota de validacion local
+
+La prueba opcional de reinicializacion en `tests/management-api.test.mjs`
+ejecuta `psql` con el usuario `yoga` y la base `yoga_salon`, mientras que la
+configuracion Compose vigente usa `POSTGRES_USER=patryoga_app` y
+`POSTGRES_DB=patryoga`. Esa comprobacion opcional puede fallar aunque el
+contrato de la API sea correcto. La inconsistencia queda documentada y no se
+corrige en esta tarea.

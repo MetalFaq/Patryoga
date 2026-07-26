@@ -24,6 +24,9 @@
 
 - Cada alumna tiene un identificador estable, nombre y telefono.
 - Las notas son opcionales y administrativas; no forman parte de la asistencia.
+- El catalogo operativo separa alumnas activas y archivadas. La consulta normal
+  muestra solo las activas; las archivadas se consultan de forma explicita y no
+  se mezclan con las activas en una misma respuesta.
 - Archivar una alumna la quita del catalogo operativo, cierra sus asignaciones
   activas y no borra sus registros historicos.
 - Reingresar una alumna reactiva la misma identidad, pero no vuelve a activar
