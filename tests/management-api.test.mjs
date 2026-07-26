@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import test from "node:test";
+import { createAuthCookie } from "./auth-cookie.mjs";
 
 const execFileAsync = promisify(execFile);
 const baseUrl = (process.env.BASE_URL ?? "http://localhost:3000").replace(/\/$/, "");
+const authCookie = await createAuthCookie(baseUrl);
 const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 const ids = {
   student: `test-student-${suffix}`,
@@ -19,7 +21,9 @@ const ids = {
 const date = "1998-01-05";
 
 async function request(path, options) {
-  const response = await fetch(`${baseUrl}${path}`, options);
+  const headers = new Headers(options?.headers);
+  headers.set("cookie", authCookie);
+  const response = await fetch(`${baseUrl}${path}`, { ...options, headers });
   const text = await response.text();
   return { response, body: text ? JSON.parse(text) : undefined };
 }

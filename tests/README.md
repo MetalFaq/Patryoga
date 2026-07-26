@@ -1,7 +1,12 @@
 # Pruebas de contrato de API
 
-La suite usa únicamente las APIs nativas de Node.js y no requiere cambios en
-`package.json`. Con PostgreSQL y Next.js levantados, ejecutar desde la raíz:
+Las suites usan las APIs nativas de Node.js y `next-auth/jwt` para crear una
+sesion local firmada. Con PostgreSQL y Next.js levantados usando las mismas
+`AUTH_SECRET` y `AUTH_ALLOWED_EMAIL`, ejecutar desde la raiz:
+
+```bash
+node --test tests/auth-access.test.mjs
+```
 
 ```bash
 node --test tests/api-contract.test.mjs
@@ -34,6 +39,14 @@ Variables opcionales:
   ejecuta `docker compose restart app`, espera a que vuelva la API y comprueba
   que PostgreSQL conserva la marca. Requiere Docker Compose y una instancia
   iniciada con `docker-compose.yml`.
+
+Variables requeridas:
+
+- `AUTH_SECRET`: el mismo valor de 32 o mas caracteres usado por la app.
+- `AUTH_ALLOWED_EMAIL`: el mismo correo configurado en la app.
+
+La cookie de prueba existe solamente en el proceso de la suite. No hay un modo
+de bypass ni una credencial fija dentro de la aplicacion.
 
 La prueba de solicitud inválida compara el estado completo antes y después,
 por lo que detecta escrituras parciales. La prueba de 404 verifica que la

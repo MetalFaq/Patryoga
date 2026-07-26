@@ -13,6 +13,16 @@ mantener este comportamiento salvo un cambio coordinado del contrato.
 - Estados de asistencia: `present`, `absent` o `unmarked`.
 - `dataSource` es informativo durante la transicion desde mocks.
 
+## Autenticacion
+
+Todos los endpoints de negocio bajo `/api/` requieren una sesion Auth.js de la
+cuenta Google cuyo correo verificado coincide con `AUTH_ALLOWED_EMAIL`. Las
+rutas internas `/api/auth/*` permanecen publicas para completar OAuth.
+
+- `401`: no hay sesion o pertenece a otra cuenta.
+- `503`: faltan credenciales, secreto, correo permitido o URL base en el
+  entorno; ninguna operacion de negocio se ejecuta en este estado.
+
 ## Tipos de respuesta
 
 ```ts

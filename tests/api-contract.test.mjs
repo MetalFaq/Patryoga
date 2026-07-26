@@ -2,16 +2,20 @@ import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import test from "node:test";
+import { createAuthCookie } from "./auth-cookie.mjs";
 
 const execFileAsync = promisify(execFile);
 const baseUrl = (process.env.BASE_URL ?? "http://localhost:3000").replace(/\/$/, "");
+const authCookie = await createAuthCookie(baseUrl);
 const classId = "class-lun-0830";
 const studentId = "stu-ana";
 const secondStudentId = "stu-elena";
 const date = process.env.ATTENDANCE_TEST_DATE ?? "1999-01-04";
 
 async function request(path, options) {
-  const response = await fetch(`${baseUrl}${path}`, options);
+  const headers = new Headers(options?.headers);
+  headers.set("cookie", authCookie);
+  const response = await fetch(`${baseUrl}${path}`, { ...options, headers });
   const body = await response.json();
   return { response, body };
 }

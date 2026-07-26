@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
 import { clsx } from "clsx";
+import { SignOutButton } from "@/components/sign-out-button";
 import { buildWeekSessions, weekdayLabels } from "@/lib/mock-data";
 import type { AttendanceStatus, ClassSession, Student, Weekday, WeeklyClass } from "@/lib/types";
 
@@ -163,7 +164,7 @@ export default function Home() {
   }
 
   return <main className="mx-auto min-h-screen w-full max-w-6xl px-4 pb-10 pt-5 sm:px-6 lg:px-8">
-    <header className="mb-5 flex items-center justify-between gap-4"><div><p className="eyebrow">Patryoga · Administración</p><h1 className="text-3xl font-semibold text-ink">Tu salón, en orden</h1></div><button className="icon-button lg:hidden" aria-label="Abrir menú" onClick={() => setMenuOpen((value) => !value)}><Menu size={22} /></button></header>
+    <header className="mb-5 flex items-center justify-between gap-4"><div><p className="eyebrow">Patryoga · Administración</p><h1 className="text-3xl font-semibold text-ink">Tu salón, en orden</h1></div><div className="flex shrink-0 gap-2"><SignOutButton /><button className="icon-button lg:hidden" aria-label="Abrir menú" onClick={() => setMenuOpen((value) => !value)}><Menu size={22} /></button></div></header>
     <nav className={clsx("mb-6 flex gap-2 rounded-2xl bg-white p-1.5 shadow-soft", menuOpen ? "flex-col lg:flex-row" : "hidden lg:flex")} aria-label="Secciones">
       <NavButton active={tab === "agenda"} icon={<CalendarDays size={18} />} label="Agenda y asistencia" onClick={() => { setTab("agenda"); setMenuOpen(false); }} />
       <NavButton active={tab === "students"} icon={<Users size={18} />} label="Alumnas" onClick={() => { setTab("students"); setMenuOpen(false); }} />
