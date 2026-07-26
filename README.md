@@ -75,14 +75,61 @@ docker compose up --build
 Completar `.env` antes de iniciar. Servicios:
 
 - App: `http://localhost:3000`
-- PostgreSQL: `localhost:5432`
-- Base: `yoga_salon`
-- Usuario local: `yoga`
-- Password local: `yoga`
+- PostgreSQL: sólo accesible dentro de la red privada de Compose (sin puerto
+  publicado al host).
+- Base, usuario y password: los valores `POSTGRES_DB`, `POSTGRES_USER` y
+  `POSTGRES_PASSWORD` de `.env`.
 
 El volumen `yoga_postgres_data` conserva PostgreSQL entre reinicios. Compose
-lee la autenticacion desde `.env` y la transmite al contenedor sin incorporarla
-a la imagen.
+lee autenticación y credenciales desde `.env`, las transmite a los contenedores
+en runtime y no las incorpora a la imagen. Para el uso con Docker, la URL
+interna se arma con esos valores y el hostname `db`; no uses `localhost` en esa
+URL dentro del contenedor.
+
+Para generar valores locales sin inventar credenciales en el repositorio, se
+puede usar Node.js:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
+```
+
+Usa una salida para `POSTGRES_PASSWORD` y otra para `AUTH_SECRET`. Mantén la
+password de PostgreSQL en caracteres URL-safe (`A-Z`, `a-z`, `0-9`, `-`, `_`)
+porque Compose construye `DATABASE_URL` con ella.
+
+### Backup, restauración y actualización
+
+El volumen nombrado no reemplaza un backup. Con la pila detenida o mientras
+PostgreSQL está saludable, exporta un dump lógico al host:
+
+```bash
+docker compose exec -T db sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --format=custom' > patryoga-$(date +%Y-%m-%d).dump
+```
+
+En PowerShell, usa `docker compose exec -T db sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --format=custom' | Set-Content -Encoding Byte patryoga-backup.dump`.
+Guarda el archivo fuera del repositorio y protégelo: contiene datos personales.
+Para restaurar sobre una instancia vacía, detén la app y ejecuta:
+
+```bash
+docker compose stop app
+docker compose exec -T db sh -c 'pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --clean --if-exists' < patryoga-backup.dump
+docker compose start app
+```
+
+Para actualizar la imagen después de revisar cambios locales, crea primero un
+backup, luego ejecuta `docker compose build --pull app` y
+`docker compose up -d`. No uses `docker compose down -v`: elimina el volumen y
+los datos persistentes.
+
+Si el puerto 3000 ya está ocupado, se puede usar temporalmente otro puerto del
+host con `APP_PORT=3100 docker compose up -d` (en PowerShell:
+`$env:APP_PORT="3100"; docker compose up -d`). El puerto interno de la app
+continúa siendo 3000.
+
+La imagen usa Node.js Alpine y PostgreSQL Alpine, sin dependencias exclusivas
+de Windows; Docker Desktop puede construirla para amd64 y arm64 cuando el
+daemon/plataforma destino lo soporte. No se configura publicación remota,
+Cloudflare, DNS ni proxy.
 
 ## Callback publico futuro
 
@@ -139,6 +186,14 @@ docker compose config
 ```
 
 Las suites de API y sus variables estan documentadas en `tests/README.md`.
+
+La verificación de despliegue local también debe confirmar que `docker compose
+config` no contiene `5432:` bajo `ports`, que `docker compose build` termina
+correctamente y que `docker compose up -d` deja `app` y `db` saludables. Se
+puede comprobar con `docker compose ps` y abrir `http://localhost:3000`.
+
+La auditoría de dependencias y la actualización masiva de paquetes quedan
+pendientes para una tarea separada; esta fase no modifica versiones de npm.
 
 ## Siguientes pasos
 

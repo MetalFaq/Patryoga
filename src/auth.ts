@@ -28,7 +28,11 @@ export const { auth, handlers, signIn, signOut } = NextAuth(() => {
     callbacks: {
       authorized({ auth: session, request }) {
         const pathname = request.nextUrl.pathname;
-        if (pathname === "/login" || pathname.startsWith("/api/auth/")) {
+        if (
+          pathname === "/login"
+          || pathname === "/api/health"
+          || pathname.startsWith("/api/auth/")
+        ) {
           return true;
         }
 

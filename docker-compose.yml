@@ -5,31 +5,37 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    restart: unless-stopped
     environment:
-      DATABASE_URL: postgres://yoga:yoga@db:5432/yoga_salon
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       NEXT_PUBLIC_APP_ENV: local
-      AUTH_SECRET: ${AUTH_SECRET:-}
-      AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID:-}
-      AUTH_GOOGLE_SECRET: ${AUTH_GOOGLE_SECRET:-}
-      AUTH_ALLOWED_EMAIL: ${AUTH_ALLOWED_EMAIL:-}
-      AUTH_TRUST_HOST: ${AUTH_TRUST_HOST:-true}
-      AUTH_URL: ${AUTH_URL:-http://localhost:3000}
+      AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET in .env}
+      AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID:?Set AUTH_GOOGLE_ID in .env}
+      AUTH_GOOGLE_SECRET: ${AUTH_GOOGLE_SECRET:?Set AUTH_GOOGLE_SECRET in .env}
+      AUTH_ALLOWED_EMAIL: ${AUTH_ALLOWED_EMAIL:?Set AUTH_ALLOWED_EMAIL in .env}
+      AUTH_TRUST_HOST: ${AUTH_TRUST_HOST:?Set AUTH_TRUST_HOST in .env}
+      AUTH_URL: ${AUTH_URL:?Set AUTH_URL in .env}
     ports:
-      - "3000:3000"
+      - "${APP_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
 
   db:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: yoga_salon
-      POSTGRES_USER: yoga
-      POSTGRES_PASSWORD: yoga
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in .env}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U yoga -d yoga_salon"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 10
-    ports:
-      - "5432:5432"
     volumes:
       - yoga_postgres_data:/var/lib/postgresql/data
       - ./db/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
