@@ -96,13 +96,15 @@ const sessionColumns = `
   attendance.status::text AS attendance_status
 `;
 
-export async function listStudents(): Promise<Student[]> {
+export type StudentListStatus = "active" | "archived";
+
+export async function listStudents(status: StudentListStatus = "active"): Promise<Student[]> {
   const result = await getPool().query<StudentRow>(`
     SELECT id, full_name AS name, phone, notes, active
     FROM students
-    WHERE active
+    WHERE active = $1
     ORDER BY full_name, id
-  `);
+  `, [status === "active"]);
 
   return result.rows.map((student) => ({
     id: student.id,
