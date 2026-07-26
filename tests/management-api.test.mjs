@@ -111,7 +111,7 @@ test("management API covers CRUD, assignments, capacity, history and seed safety
     assert.equal(saved.response.status, 200);
     const closed = await unassign(ids.secondStudent, [ids.class]);
     assert.equal(closed.response.status, 200);
-    const futureSession = await attendance(ids.class, "2026-07-20");
+    const futureSession = await attendance(ids.class, "2099-01-05");
     assert.equal(futureSession.body.session.studentIds.includes(ids.secondStudent), false);
     const historical = await attendance(ids.class, date);
     assert.equal(historical.body.session.students.find((item) => item.id === ids.secondStudent)?.status, "present");
