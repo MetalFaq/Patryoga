@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
-import { getClassSession, saveAttendanceEntries, weeklyClasses } from "@/lib/mock-data";
 import type { AttendanceStatus } from "@/lib/types";
+import { isIsoDate } from "@/server/dates";
+import {
+  classExists,
+  ClassNotFoundError,
+  getClassSession,
+  saveAttendanceEntries,
+  StudentNotAssignedError
+} from "@/server/yoga-repository";
 
 type RouteContext = {
   params: Promise<{
@@ -10,18 +17,8 @@ type RouteContext = {
 
 const attendanceStatuses = new Set<AttendanceStatus>(["present", "absent", "unmarked"]);
 
-function isIsoDate(value: string) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return false;
-  }
-
-  const parsed = new Date(`${value}T00:00:00Z`);
-  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
-}
-
-function getWeeklyClass(classId: string) {
-  return weeklyClasses.find((item) => item.id === classId);
-}
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export async function GET(request: Request, context: RouteContext) {
   const { classId } = await context.params;
@@ -32,7 +29,7 @@ export async function GET(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "date must use YYYY-MM-DD format" }, { status: 400 });
   }
 
-  const session = getClassSession(classId, date);
+  const session = await getClassSession(classId, date);
 
   if (!session) {
     return NextResponse.json({ error: "class not found" }, { status: 404 });
@@ -46,9 +43,8 @@ export async function GET(request: Request, context: RouteContext) {
 
 export async function POST(request: Request, context: RouteContext) {
   const { classId } = await context.params;
-  const weeklyClass = getWeeklyClass(classId);
 
-  if (!weeklyClass) {
+  if (!(await classExists(classId))) {
     return NextResponse.json({ error: "class not found" }, { status: 404 });
   }
 
@@ -73,7 +69,6 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "date and attendance are required" }, { status: 400 });
   }
 
-  const validStudentIds = new Set(weeklyClass.studentIds);
   const seenStudentIds = new Set<string>();
   const entries: Array<{ studentId: string; status: AttendanceStatus }> = [];
 
@@ -84,7 +79,7 @@ export async function POST(request: Request, context: RouteContext) {
 
     const { studentId, status } = entry as { studentId?: unknown; status?: unknown };
 
-    if (typeof studentId !== "string" || !validStudentIds.has(studentId)) {
+    if (typeof studentId !== "string") {
       return NextResponse.json({ error: "attendance contains a student outside this class" }, { status: 400 });
     }
 
@@ -100,7 +95,21 @@ export async function POST(request: Request, context: RouteContext) {
     entries.push({ studentId, status: status as AttendanceStatus });
   }
 
-  const saved = saveAttendanceEntries(classId, candidate.date, entries);
+  let saved;
+
+  try {
+    saved = await saveAttendanceEntries(classId, candidate.date, entries);
+  } catch (error) {
+    if (error instanceof ClassNotFoundError) {
+      return NextResponse.json({ error: "class not found" }, { status: 404 });
+    }
+
+    if (error instanceof StudentNotAssignedError) {
+      return NextResponse.json({ error: "attendance contains a student outside this class" }, { status: 400 });
+    }
+
+    throw error;
+  }
 
   return NextResponse.json({
     dataSource: "runtime",
