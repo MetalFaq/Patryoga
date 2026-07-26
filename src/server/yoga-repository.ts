@@ -100,6 +100,7 @@ export async function listStudents(): Promise<Student[]> {
   const result = await getPool().query<StudentRow>(`
     SELECT id, full_name AS name, phone, notes, active
     FROM students
+    WHERE active
     ORDER BY full_name, id
   `);
 
@@ -114,6 +115,7 @@ export async function listStudents(): Promise<Student[]> {
 export class StudentNotFoundError extends Error {}
 export class ClassAlreadyArchivedError extends Error {}
 export class CapacityExceededError extends Error {}
+export class EnrollmentReactivationUnsupportedError extends Error {}
 
 export type StudentInput = { name: string; phone: string; notes?: string };
 export type ClassInput = {
@@ -207,8 +209,12 @@ export async function setStudentClasses(studentId: string, classIds: string[], a
       if (!classResult.rows[0]) throw new ClassNotFoundError();
       if (assign && !classResult.rows[0].active) throw new ClassAlreadyArchivedError();
       if (assign) {
-        const existing = await client.query("SELECT 1 FROM class_enrollments WHERE class_id = $1 AND student_id = $2", [classId, studentId]);
-        if (existing.rowCount) await client.query("UPDATE class_enrollments SET active_until = NULL WHERE class_id = $1 AND student_id = $2", [classId, studentId]);
+        const existing = await client.query<{ active_until: string | null }>(
+          "SELECT active_until FROM class_enrollments WHERE class_id = $1 AND student_id = $2 FOR UPDATE",
+          [classId, studentId]
+        );
+        if (existing.rows[0]?.active_until === null) continue;
+        if (existing.rowCount) throw new EnrollmentReactivationUnsupportedError();
         else {
           const count = await client.query<{ count: string }>("SELECT count(*) FROM class_enrollments WHERE class_id = $1 AND active_until IS NULL", [classId]);
           if (Number(count.rows[0].count) >= classResult.rows[0].capacity) throw new CapacityExceededError();

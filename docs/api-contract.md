@@ -1,8 +1,8 @@
 # Contrato inicial de API
 
-Este documento fija el contrato de la API integrada mientras la aplicacion usa
-datos ficticios y persistencia en memoria. PostgreSQL debe mantener este
-comportamiento salvo que el contrato se cambie de forma coordinada.
+Este documento fija el contrato de la API integrada sobre PostgreSQL. Los datos
+iniciales siguen siendo ficticios, pero los cambios son persistentes y deben
+mantener este comportamiento salvo un cambio coordinado del contrato.
 
 ## Convenciones
 
@@ -73,10 +73,92 @@ Respuesta `200`:
 
 ```json
 {
-  "dataSource": "mock",
+  "dataSource": "runtime",
   "students": []
 }
 ```
+
+La lista contiene solamente alumnas activas. Las alumnas archivadas siguen en
+la base para preservar historial, pero no aparecen en este catalogo operativo.
+
+## Gestion de alumnas
+
+### `POST /api/students`
+
+Crea una alumna activa. Requiere `name` y `phone` no vacios; `notes` e `id` son
+opcionales. Si no se envia `id`, el servidor genera uno.
+
+- `201`: `{ "dataSource": "runtime", "student": Student }`.
+- `400`: cuerpo o campos invalidos.
+- `409`: el identificador ya existe.
+
+### `PATCH /api/students/:studentId`
+
+Actualiza de forma parcial `name`, `phone` o `notes`.
+
+- `200`: `{ "dataSource": "runtime", "student": Student }`.
+- `400`: cuerpo o campos invalidos.
+- `404`: la alumna no existe.
+
+### `DELETE /api/students/:studentId`
+
+Archiva la alumna sin borrar datos ni asistencias. Tambien cierra sus
+asignaciones activas con la fecha actual.
+
+- `204`: archivado aplicado de forma idempotente.
+- `404`: la alumna no existe.
+
+## Gestion de clases semanales
+
+### `POST /api/classes`
+
+Crea una plantilla semanal. Requiere `title`, `weekday`, `time`,
+`durationMinutes`, `teacher`, `room` y `capacity`; `id` es opcional.
+
+- `201`: `{ "dataSource": "runtime", "class": { ... } }`.
+- `400`: cuerpo, horario, dia o campos numericos invalidos.
+- `409`: el identificador ya existe.
+
+### `PATCH /api/classes/:classId`
+
+Actualiza al menos uno de los campos editables de la plantilla. Reducir el cupo
+por debajo de las asignaciones activas se rechaza de forma transaccional.
+
+- `200`: `{ "dataSource": "runtime", "message": "Class updated" }`.
+- `400`: no hay campos editables o algun campo es invalido.
+- `404`: la clase no existe.
+- `409`: el nuevo cupo es menor que las asignaciones activas.
+
+### `DELETE /api/classes/:classId`
+
+Archiva la plantilla sin borrar asignaciones ni asistencias historicas.
+
+- `204`: archivado aplicado de forma idempotente.
+- `404`: la clase no existe.
+
+## Gestion de asignaciones
+
+`POST /api/students/:studentId/classes` asigna y
+`DELETE /api/students/:studentId/classes` cierra asignaciones. Ambos reciben:
+
+```json
+{
+  "classIds": ["class-lun-0830"]
+}
+```
+
+La operacion completa es transaccional. El arreglo debe contener identificadores
+unicos y no puede estar vacio.
+
+- `200`: `{ "dataSource": "runtime", "message": "...", "classIds": [] }`.
+- `400`: cuerpo o `classIds` invalidos.
+- `404`: alumna inexistente/archivada o clase inexistente.
+- `409`: clase archivada, cupo agotado o intento de reactivar una asignacion
+  cerrada sin crear un nuevo periodo de vigencia.
+
+Asignar otra vez una relacion que ya esta activa es idempotente. Cerrar una
+relacion inexistente o ya cerrada no modifica historial. Hasta definir el modelo
+de reingresos, una asignacion cerrada no se puede reactivar.
 
 ## `GET /api/classes/:classId/attendance`
 

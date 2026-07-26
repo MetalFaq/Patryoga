@@ -68,11 +68,7 @@ INSERT INTO students (id, full_name, phone, notes) VALUES
   ('stu-paula', 'Paula Gomez', '+54 11 5555-0106', NULL),
   ('stu-nora', 'Nora Castro', '+54 11 5555-0107', NULL),
   ('stu-ines', 'Ines Sosa', '+54 11 5555-0108', NULL)
-ON CONFLICT (id) DO UPDATE SET
-  full_name = EXCLUDED.full_name,
-  phone = EXCLUDED.phone,
-  notes = EXCLUDED.notes,
-  active = true;
+ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO weekly_classes (
   id,
@@ -88,14 +84,7 @@ INSERT INTO weekly_classes (
   ('class-mar-1830', 'Hatha integral', 'tuesday', '18:30', 75, 'Silvia', 'Sala sol', 10),
   ('class-jue-1000', 'Movilidad y respiracion', 'thursday', '10:00', 60, 'Silvia', 'Sala calma', 8),
   ('class-sab-0930', 'Practica semanal', 'saturday', '09:30', 90, 'Silvia', 'Sala sol', 12)
-ON CONFLICT (id) DO UPDATE SET
-  title = EXCLUDED.title,
-  weekday = EXCLUDED.weekday,
-  start_time = EXCLUDED.start_time,
-  duration_minutes = EXCLUDED.duration_minutes,
-  teacher = EXCLUDED.teacher,
-  room = EXCLUDED.room,
-  capacity = EXCLUDED.capacity;
+ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO class_enrollments (class_id, student_id, active_from, position) VALUES
   ('class-lun-0830', 'stu-ana', '-infinity', 1),
@@ -114,10 +103,7 @@ INSERT INTO class_enrollments (class_id, student_id, active_from, position) VALU
   ('class-sab-0930', 'stu-lucia', '-infinity', 2),
   ('class-sab-0930', 'stu-paula', '-infinity', 3),
   ('class-sab-0930', 'stu-ines', '-infinity', 4)
-ON CONFLICT (class_id, student_id) DO UPDATE SET
-  active_from = EXCLUDED.active_from,
-  active_until = NULL,
-  position = EXCLUDED.position;
+ON CONFLICT (class_id, student_id) DO NOTHING;
 
 INSERT INTO attendance_records (class_id, student_id, session_date, status) VALUES
   ('class-lun-0830', 'stu-ana', '2026-07-20', 'present'),

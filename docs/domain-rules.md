@@ -6,15 +6,17 @@
   docente, sala y capacidad.
 - La identidad de la plantilla es `classId` y no cambia entre semanas.
 - Una sesion concreta se identifica por `(classId, date)`.
-- Como regla objetivo, la fecha de una sesion debe coincidir con el dia semanal
-  de su plantilla. La API mock todavia no aplica esta validacion.
+- La agenda semanal genera cada sesion en el dia configurado por su plantilla.
+- Archivar una plantilla la quita de agendas nuevas sin borrar asignaciones ni
+  asistencias historicas.
 - Cambiar una plantilla no debe borrar asistencias historicas.
 
 ## Alumnas
 
 - Cada alumna tiene un identificador estable, nombre y telefono.
 - Las notas son opcionales y administrativas; no forman parte de la asistencia.
-- Eliminar o desactivar una alumna no debe borrar sus registros historicos.
+- Archivar una alumna la quita del catalogo operativo, cierra sus asignaciones
+  activas y no borra sus registros historicos.
 
 ## Asignaciones habituales
 
@@ -24,8 +26,12 @@
 - Una asignacion no equivale a presencia: cada sesion comienza como `unmarked`
   salvo que exista un registro guardado.
 - Quitar una asignacion afecta sesiones futuras, pero no debe alterar asistencias
-  pasadas. El modelo persistente debe conservar historial o vigencia de la
-  asignacion antes de habilitar bajas reales.
+  pasadas. El cierre registra `active_until` y no elimina la fila.
+- Asignar otra vez una relacion activa es idempotente.
+- Reactivar una asignacion cerrada se rechaza hasta definir un modelo con
+  multiples periodos de vigencia; no se borra ni reescribe el periodo anterior.
+- Altas, bajas y cambios de cupo se validan dentro de transacciones. El bloqueo
+  de la clase serializa el control de capacidad para asignaciones concurrentes.
 
 ## Asistencias
 
@@ -45,10 +51,9 @@
 ## Historial y persistencia
 
 - Las correcciones historicas son operaciones normales, no excepciones.
-- Reiniciar el servidor borra actualmente los cambios en memoria. Esta es una
-  limitacion temporal, no una regla de negocio.
-- PostgreSQL debe aplicar claves unicas y transacciones que mantengan las reglas
-  anteriores.
+- PostgreSQL conserva los cambios al reiniciar la aplicacion.
+- PostgreSQL aplica claves unicas y transacciones para mantener las reglas
+  anteriores. Archivar entidades nunca elimina asistencias.
 - Las migraciones, autenticacion, auditoria de cambios y politicas de borrado se
   definiran en tareas posteriores.
 
