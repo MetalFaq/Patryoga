@@ -30,6 +30,7 @@ type StudentRow = {
   name: string;
   phone: string;
   notes: string | null;
+  active: boolean;
 };
 
 export class ClassNotFoundError extends Error {}
@@ -97,7 +98,7 @@ const sessionColumns = `
 
 export async function listStudents(): Promise<Student[]> {
   const result = await getPool().query<StudentRow>(`
-    SELECT id, full_name AS name, phone, notes
+    SELECT id, full_name AS name, phone, notes, active
     FROM students
     ORDER BY full_name, id
   `);
@@ -108,6 +109,116 @@ export async function listStudents(): Promise<Student[]> {
     phone: student.phone,
     ...(student.notes !== null ? { notes: student.notes } : {})
   }));
+}
+
+export class StudentNotFoundError extends Error {}
+export class ClassAlreadyArchivedError extends Error {}
+export class CapacityExceededError extends Error {}
+
+export type StudentInput = { name: string; phone: string; notes?: string };
+export type ClassInput = {
+  title: string;
+  weekday: Weekday;
+  time: string;
+  durationMinutes: number;
+  teacher: string;
+  room: string;
+  capacity: number;
+};
+
+export async function createStudent(id: string, input: StudentInput): Promise<Student> {
+  const result = await getPool().query<StudentRow>(`
+    INSERT INTO students (id, full_name, phone, notes)
+    VALUES ($1, $2, $3, $4)
+    RETURNING id, full_name AS name, phone, notes, active
+  `, [id, input.name, input.phone, input.notes ?? null]);
+  const student = result.rows[0];
+  return { id: student.id, name: student.name, phone: student.phone,
+    ...(student.notes !== null ? { notes: student.notes } : {}) };
+}
+
+export async function updateStudent(studentId: string, input: Partial<StudentInput>): Promise<Student> {
+  const result = await getPool().query<StudentRow>(`
+    UPDATE students
+    SET full_name = COALESCE($2, full_name), phone = COALESCE($3, phone), notes = CASE WHEN $4::boolean THEN $5 ELSE notes END
+    WHERE id = $1
+    RETURNING id, full_name AS name, phone, notes, active
+  `, [studentId, input.name ?? null, input.phone ?? null, Object.hasOwn(input, "notes"), input.notes ?? null]);
+  if (!result.rows[0]) throw new StudentNotFoundError();
+  const student = result.rows[0];
+  return { id: student.id, name: student.name, phone: student.phone,
+    ...(student.notes !== null ? { notes: student.notes } : {}) };
+}
+
+export async function archiveStudent(studentId: string): Promise<void> {
+  const client = await getPool().connect();
+  try {
+    await client.query("BEGIN");
+    const result = await client.query("UPDATE students SET active = false WHERE id = $1", [studentId]);
+    if (result.rowCount === 0) throw new StudentNotFoundError();
+    await client.query("UPDATE class_enrollments SET active_until = CURRENT_DATE WHERE student_id = $1 AND active_until IS NULL", [studentId]);
+    await client.query("COMMIT");
+  } catch (error) { await client.query("ROLLBACK"); throw error; } finally { client.release(); }
+}
+
+export async function createClass(id: string, input: ClassInput): Promise<void> {
+  await getPool().query(`
+    INSERT INTO weekly_classes (id, title, weekday, start_time, duration_minutes, teacher, room, capacity)
+    VALUES ($1, $2, $3, $4::time, $5, $6, $7, $8)
+  `, [id, input.title, input.weekday, input.time, input.durationMinutes, input.teacher, input.room, input.capacity]);
+}
+
+export async function updateClass(classId: string, input: Partial<ClassInput>): Promise<void> {
+  const fields: Array<[string, unknown]> = [
+    ["title", input.title], ["weekday", input.weekday], ["start_time", input.time],
+    ["duration_minutes", input.durationMinutes], ["teacher", input.teacher], ["room", input.room], ["capacity", input.capacity]
+  ];
+  const set: string[] = []; const values: unknown[] = [classId];
+  for (const [field, value] of fields) if (value !== undefined) { values.push(value); set.push(`${field} = $${values.length}${field === "start_time" ? "::time" : ""}`); }
+  if (set.length === 0) throw new Error("no fields");
+  const client = await getPool().connect();
+  try {
+    await client.query("BEGIN");
+    const current = await client.query<{ capacity: number }>("SELECT capacity FROM weekly_classes WHERE id = $1 FOR UPDATE", [classId]);
+    if (!current.rows[0]) throw new ClassNotFoundError();
+    if (input.capacity !== undefined) {
+      const assigned = await client.query<{ count: string }>("SELECT count(*) FROM class_enrollments WHERE class_id = $1 AND active_until IS NULL", [classId]);
+      if (Number(assigned.rows[0].count) > input.capacity) throw new CapacityExceededError();
+    }
+    await client.query(`UPDATE weekly_classes SET ${set.join(", ")} WHERE id = $1`, values);
+    await client.query("COMMIT");
+  } catch (error) { await client.query("ROLLBACK"); throw error; } finally { client.release(); }
+}
+
+export async function archiveClass(classId: string): Promise<void> {
+  const result = await getPool().query("UPDATE weekly_classes SET active = false WHERE id = $1", [classId]);
+  if (result.rowCount === 0) throw new ClassNotFoundError();
+}
+
+export async function setStudentClasses(studentId: string, classIds: string[], assign: boolean): Promise<void> {
+  const client = await getPool().connect();
+  try {
+    await client.query("BEGIN");
+    const student = await client.query<{ active: boolean }>("SELECT active FROM students WHERE id = $1 FOR SHARE", [studentId]);
+    if (!student.rows[0]) throw new StudentNotFoundError();
+    if (assign && !student.rows[0].active) throw new StudentNotFoundError();
+    for (const classId of classIds) {
+      const classResult = await client.query<{ capacity: number; active: boolean }>("SELECT capacity, active FROM weekly_classes WHERE id = $1 FOR UPDATE", [classId]);
+      if (!classResult.rows[0]) throw new ClassNotFoundError();
+      if (assign && !classResult.rows[0].active) throw new ClassAlreadyArchivedError();
+      if (assign) {
+        const existing = await client.query("SELECT 1 FROM class_enrollments WHERE class_id = $1 AND student_id = $2", [classId, studentId]);
+        if (existing.rowCount) await client.query("UPDATE class_enrollments SET active_until = NULL WHERE class_id = $1 AND student_id = $2", [classId, studentId]);
+        else {
+          const count = await client.query<{ count: string }>("SELECT count(*) FROM class_enrollments WHERE class_id = $1 AND active_until IS NULL", [classId]);
+          if (Number(count.rows[0].count) >= classResult.rows[0].capacity) throw new CapacityExceededError();
+          const position = await client.query<{ position: number }>("SELECT COALESCE(MAX(position), 0) + 1 AS position FROM class_enrollments WHERE class_id = $1", [classId]);
+          await client.query("INSERT INTO class_enrollments (class_id, student_id, position) VALUES ($1, $2, $3)", [classId, studentId, position.rows[0].position]);
+        }
+      } else await client.query("UPDATE class_enrollments SET active_until = CURRENT_DATE WHERE class_id = $1 AND student_id = $2 AND active_until IS NULL", [classId, studentId]);
+    }
+    await client.query("COMMIT");
+  } catch (error) { await client.query("ROLLBACK"); throw error; } finally { client.release(); }
 }
 
 export async function listWeekSessions(weekStart = "2026-07-20"): Promise<ClassSession[]> {

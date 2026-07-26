@@ -12,8 +12,11 @@ CREATE TABLE IF NOT EXISTS students (
   full_name TEXT NOT NULL,
   phone TEXT NOT NULL,
   notes TEXT,
+  active BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE students ADD COLUMN IF NOT EXISTS active BOOLEAN NOT NULL DEFAULT true;
 
 CREATE TABLE IF NOT EXISTS weekly_classes (
   id TEXT PRIMARY KEY,
@@ -68,7 +71,8 @@ INSERT INTO students (id, full_name, phone, notes) VALUES
 ON CONFLICT (id) DO UPDATE SET
   full_name = EXCLUDED.full_name,
   phone = EXCLUDED.phone,
-  notes = EXCLUDED.notes;
+  notes = EXCLUDED.notes,
+  active = true;
 
 INSERT INTO weekly_classes (
   id,
