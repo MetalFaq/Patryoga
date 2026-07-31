@@ -17,9 +17,9 @@ seguimiento de clases consumidas sin incluir pagos.
 
 ## Lectura del progreso
 
-`Usadas` es la suma de presentes y ausentes dentro de las sesiones incluidas.
-`Restantes` es `max(cupo - usadas, 0)`. Una sesion sin registrar no consume y
-una sesion adicional se muestra como fuera del plan.
+`Usadas` es la suma de presentes y ausentes dentro de las sesiones incluidas
+cuya fecha ya llego. `Restantes` es `max(cupo - usadas, 0)`. Una sesion futura,
+una sesion sin registrar o una sesion adicional fuera del plan no consume.
 
 La base conserva el catalogo, el snapshot mensual y las sesiones que dieron
 origen al calculo. Esa evidencia queda preparada para futuros indicadores de

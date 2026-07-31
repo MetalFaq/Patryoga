@@ -85,7 +85,8 @@
   habituales restantes desde su fecha de ingreso.
 - Las sesiones elegibles se ordenan por fecha y hora. Las primeras hasta
   alcanzar el cupo pertenecen al pool; las restantes quedan fuera del plan.
-- Tanto `present` como `absent` consumen una clase. `unmarked` no consume.
+- Tanto `present` como `absent` consumen una clase cuando la sesion ya ocurrio.
+  Una marca futura no consume hasta llegar su fecha y `unmarked` no consume.
 - Las sesiones futuras permanecen programadas y no se consideran consumidas.
 - Las sesiones y horarios usados para calcular el pool se guardan como snapshot
   mensual, de modo que cambios posteriores de horarios no reescriban historia.

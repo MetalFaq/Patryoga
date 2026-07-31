@@ -330,7 +330,9 @@ Reglas:
   alcanzar el cupo quedan `included: true`; las adicionales quedan fuera.
 - El calculo usa los horarios habituales vigentes y guarda las sesiones como
   snapshot. Cambiar horarios despues no reescribe el plan mensual.
-- Presente y ausente consumen cupo. `unmarked` no consume cupo.
+- Presente y ausente consumen cupo solo cuando la fecha de la sesion es igual o
+  anterior a la fecha actual. Una marca futura no consume hasta llegar el dia.
+  `unmarked` no consume cupo.
 - Reemplazar una asignacion con asistencias ya registradas para alguna de sus
   sesiones se rechaza para no reescribir historia.
 
