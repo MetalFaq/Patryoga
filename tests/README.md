@@ -25,6 +25,26 @@ Para ejecutar las pruebas de gestión:
 node --test tests/management-api.test.mjs
 ```
 
+Para validar el catálogo de planes, las asignaciones mensuales, los pools
+completos y proporcionales, los snapshots históricos y el progreso por
+asistencia:
+
+```bash
+node --test tests/monthly-plans-api.test.mjs
+```
+
+La suite de planes crea alumnas/os, clases y planes con identificadores únicos.
+Al terminar archiva las personas, retira las clases y desactiva los planes
+personalizados; nunca elimina historial ajeno. Usa agosto de 2099 para comprobar
+de forma determinista el primer y último lunes a viernes, el orden de sesiones y
+las fechas adicionales fuera del pool. Ese mes fijo evita que el resultado
+dependa del día en que se ejecute la prueba.
+
+La comprobación de consumo usa el mes y la fecha actuales porque una asistencia
+futura permanece programada y no consume cupo. Si se ejecuta durante sábado o
+domingo, ese caso puntual se omite porque el dominio sólo permite clases de
+lunes a viernes; el resto de la suite continúa ejecutándose.
+
 La prueba de reejecución de `db/init.sql` está omitida por defecto porque
 requiere Docker Compose y ejecuta `psql` dentro del contenedor de PostgreSQL.
 Con los servicios levantados, habilitarla así:
