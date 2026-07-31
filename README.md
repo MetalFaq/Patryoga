@@ -8,6 +8,8 @@ salon de yoga.
 - Proyecto Next.js con TypeScript y Tailwind.
 - Interfaz responsive con foco movil para agenda y administracion.
 - CRUD de alumnas, clases semanales, asignaciones y asistencia historica.
+- Catalogo configurable de planes mensuales, con planes iniciales de 4 y 8
+  clases, asignaciones completas o proporcionales y seguimiento del pool.
 - Persistencia PostgreSQL y ejecucion local con Docker Compose.
 - Autenticacion Google con una lista acotada de cuentas administradoras
   autorizadas.
@@ -164,6 +166,11 @@ PATCH  /api/students/:studentId
 DELETE /api/students/:studentId
 POST   /api/students/:studentId/classes
 DELETE /api/students/:studentId/classes
+GET    /api/plans
+POST   /api/plans
+PATCH  /api/plans/:planId
+GET    /api/plan-assignments?month=YYYY-MM
+PUT    /api/plan-assignments/:studentId/:month
 GET    /api/auth/session
 ```
 
@@ -179,6 +186,9 @@ en `docs/domain-rules.md`.
 - `weekly_classes`: clases fijas semanales.
 - `class_enrollments`: asignaciones habituales con vigencia.
 - `attendance_records`: asistencia por clase, alumna y fecha.
+- `membership_plans`: catalogo activo e historico de planes.
+- `monthly_plan_assignments`: snapshot del plan asignado por alumna y mes.
+- `monthly_plan_sessions`: clases incluidas y adicionales que originan el pool.
 
 ## Verificacion
 
@@ -204,3 +214,4 @@ pendientes para una tarea separada; esta fase no modifica versiones de npm.
 1. Agregar migraciones versionadas.
 2. Definir dominio, HTTPS y secretos del entorno publico.
 3. Incorporar auditoria de cambios administrativos.
+4. Agregar pagos y tableros historicos a partir de planes y asistencias.
