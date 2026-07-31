@@ -136,6 +136,7 @@ export default function Home() {
   const [archivedStudents, setArchivedStudents] = useState<Student[]>([]);
   const [attendanceByKey, setAttendanceByKey] = useState<Record<string, AttendanceStatus>>({});
   const [planAssignments, setPlanAssignments] = useState<MonthlyPlanAssignment[]>([]);
+  const [planRefreshKey, setPlanRefreshKey] = useState(0);
   const [planContextError, setPlanContextError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -257,7 +258,7 @@ export default function Home() {
     }
     void loadPlanAssignments();
     return () => controller.abort();
-  }, [visibleMonthKey]);
+  }, [planRefreshKey, tab, visibleMonthKey]);
 
   useEffect(() => {
     setSelectedKey((current) => visibleSessions.some((session) => sessionKey(session) === current) ? current : visibleSessions[0] ? sessionKey(visibleSessions[0]) : "");
@@ -338,6 +339,7 @@ export default function Home() {
         changedStudents.forEach((student) => delete next[`${visibleSession.id}:${visibleSession.date}:${student.id}`]);
         return next;
       });
+      setPlanRefreshKey((current) => current + 1);
       setSaveState("saved");
     } catch (error) {
       setSaveState("error");
@@ -500,7 +502,7 @@ export default function Home() {
   }
 
   async function deleteClass(item: WeeklyClass) {
-    const confirmed = window.confirm(`¿Eliminar “${item.title}” de la agenda? Si no tiene asistencias se eliminará por completo. Si ya tiene asistencias, se retirará de las agendas futuras y se conservará todo el historial.`);
+    const confirmed = window.confirm(`¿Eliminar “${item.title}” de la agenda? Si no tiene asistencias ni aparece en un plan mensual se eliminará por completo. Si ya forma parte del historial, se retirará de las agendas futuras y se conservarán sus registros.`);
     if (!confirmed) return;
     setIsMutating(true);
     setEditorError(null);
@@ -514,7 +516,7 @@ export default function Home() {
       }
       await loadData();
       setClassEditor(null);
-      setOperationNotice("La clase se quitó de la agenda. Si tenía asistencias guardadas, el servidor conservó su historial y cerró sus horarios vigentes.");
+      setOperationNotice("La clase se quitó de la agenda. Si tenía asistencias o formaba parte de un plan mensual, el servidor conservó su historial y cerró sus horarios vigentes.");
     } catch (error) {
       setEditorError(error instanceof Error ? error.message : "No se pudo eliminar la clase.");
     } finally {
@@ -668,5 +670,5 @@ function StudentPanel({ student, classes, isMutating, error, notice, onClose, on
 
 function ClassPanel({ item, isMutating, error, onClose, onSave, onDelete }: { item: WeeklyClass | "new"; isMutating: boolean; error: string | null; onClose: () => void; onSave: (event: FormEvent<HTMLFormElement>) => void; onDelete: (item: WeeklyClass) => void }) {
   const existing = item !== "new" ? item : null;
-  return <Panel title={existing ? existing.title : "Nueva clase"} description="El horario se repite cada semana. La docente y la sala ya están definidas por el salón." onClose={onClose}><form className="panel-content" onSubmit={onSave}><Field label="Nombre de la clase" name="title" defaultValue={existing?.title} /><div className="responsive-field-grid"><label className="field"><span>Día</span><select name="weekday" defaultValue={existing?.weekday === "saturday" ? "monday" : existing?.weekday ?? "monday"}>{weekdays.map((day) => <option key={day} value={day}>{weekdayLabels[day]}</option>)}</select></label><Field label="Hora" name="time" defaultValue={existing?.time ?? "09:00"} type="time" /></div><div className="responsive-field-grid"><Field label="Duración (min)" name="durationMinutes" defaultValue={existing?.durationMinutes ?? 60} type="number" min={1} /><Field label="Cupo" name="capacity" defaultValue={existing?.capacity ?? 8} type="number" min={1} /></div>{error ? <Notice tone="error">{error}</Notice> : null}<div className="panel-actions"><button className="action-button action-button-light" type="button" onClick={onClose}>Cancelar</button><button className="action-button action-button-dark" disabled={isMutating} type="submit">{isMutating ? <LoaderCircle className="animate-spin" size={17} /> : <Save size={17} />}Guardar clase</button></div></form>{existing ? <div className="delete-zone"><p><strong>Eliminar clase</strong><span>Sin asistencias se elimina por completo. Con asistencias se retira de agendas futuras y el historial queda protegido.</span></p><button className="danger-button" disabled={isMutating} onClick={() => onDelete(existing)} type="button"><Trash2 size={17} />Eliminar clase</button></div> : null}</Panel>;
+  return <Panel title={existing ? existing.title : "Nueva clase"} description="El horario se repite cada semana. La docente y la sala ya están definidas por el salón." onClose={onClose}><form className="panel-content" onSubmit={onSave}><Field label="Nombre de la clase" name="title" defaultValue={existing?.title} /><div className="responsive-field-grid"><label className="field"><span>Día</span><select name="weekday" defaultValue={existing?.weekday === "saturday" ? "monday" : existing?.weekday ?? "monday"}>{weekdays.map((day) => <option key={day} value={day}>{weekdayLabels[day]}</option>)}</select></label><Field label="Hora" name="time" defaultValue={existing?.time ?? "09:00"} type="time" /></div><div className="responsive-field-grid"><Field label="Duración (min)" name="durationMinutes" defaultValue={existing?.durationMinutes ?? 60} type="number" min={1} /><Field label="Cupo" name="capacity" defaultValue={existing?.capacity ?? 8} type="number" min={1} /></div>{error ? <Notice tone="error">{error}</Notice> : null}<div className="panel-actions"><button className="action-button action-button-light" type="button" onClick={onClose}>Cancelar</button><button className="action-button action-button-dark" disabled={isMutating} type="submit">{isMutating ? <LoaderCircle className="animate-spin" size={17} /> : <Save size={17} />}Guardar clase</button></div></form>{existing ? <div className="delete-zone"><p><strong>Eliminar clase</strong><span>Solo se borra por completo si no tiene asistencias ni aparece en un plan mensual. De lo contrario se retira y el historial queda protegido.</span></p><button className="danger-button" disabled={isMutating} onClick={() => onDelete(existing)} type="button"><Trash2 size={17} />Eliminar clase</button></div> : null}</Panel>;
 }
