@@ -10,13 +10,13 @@ import {
   Clock,
   Edit3,
   History,
+  Layers3,
   LoaderCircle,
   Menu,
   Plus,
   RotateCcw,
   Save,
   Trash2,
-  UserCheck,
   UserRoundCheck,
   Users,
   X
@@ -24,14 +24,15 @@ import {
 import { clsx } from "clsx";
 import { FormEvent, ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { SignOutButton } from "@/components/sign-out-button";
+import { PlanManagement } from "@/components/plan-management";
+import { StudentPlanSection } from "@/components/student-plan-section";
 import { weekdayLabels } from "@/lib/mock-data";
-import type { AttendanceStatus, ClassSession, Student, Weekday, WeeklyClass } from "@/lib/types";
+import type { AttendanceStatus, ClassSession, MonthlyPlanAssignment, Student, Weekday, WeeklyClass } from "@/lib/types";
 
 const weekdays: Array<Exclude<Weekday, "saturday">> = ["monday", "tuesday", "wednesday", "thursday", "friday"];
 const weekdayOrder: Record<Weekday, number> = { monday: 0, tuesday: 1, wednesday: 2, thursday: 3, friday: 4, saturday: 5 };
-const statusCopy: Record<AttendanceStatus, string> = { present: "Presente", absent: "Ausente", unmarked: "Pendiente" };
 type SaveState = "idle" | "saving" | "saved" | "error";
-type Tab = "agenda" | "students" | "classes";
+type Tab = "agenda" | "students" | "classes" | "plans";
 type AgendaMode = "day" | "week" | "range";
 
 function isoDateInBuenosAires() {
@@ -89,6 +90,12 @@ function formatShortDate(date: string) {
   return new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "short" }).format(dateFromIso(date));
 }
 
+function attendanceLabel(status: AttendanceStatus, date: string) {
+  if (status === "present") return "Presente";
+  if (status === "absent") return "Ausente";
+  return date > today ? "Programada" : "Sin registrar";
+}
+
 function sessionKey(session: Pick<ClassSession, "id" | "date">) {
   return `${session.id}:${session.date}`;
 }
@@ -128,6 +135,8 @@ export default function Home() {
   const [students, setStudents] = useState<Student[]>([]);
   const [archivedStudents, setArchivedStudents] = useState<Student[]>([]);
   const [attendanceByKey, setAttendanceByKey] = useState<Record<string, AttendanceStatus>>({});
+  const [planAssignments, setPlanAssignments] = useState<MonthlyPlanAssignment[]>([]);
+  const [planContextError, setPlanContextError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
@@ -163,6 +172,8 @@ export default function Home() {
     if (agendaMode === "range") return session.date >= rangeStart && session.date <= rangeEnd;
     return true;
   }), [agendaMode, dayDate, rangeEnd, rangeStart, sessions]);
+
+  const visibleMonthKey = useMemo(() => [...new Set(visibleSessions.map((session) => session.date.slice(0, 7)))].sort().join(","), [visibleSessions]);
 
   const classes = useMemo(() => {
     const map = new Map<string, WeeklyClass>();
@@ -219,6 +230,36 @@ export default function Home() {
   }, [loadData]);
 
   useEffect(() => {
+    const controller = new AbortController();
+    const months = visibleMonthKey ? visibleMonthKey.split(",") : [];
+    if (!months.length) {
+      setPlanAssignments([]);
+      setPlanContextError(null);
+      return () => controller.abort();
+    }
+    async function loadPlanAssignments() {
+      setPlanContextError(null);
+      try {
+        const responses = await Promise.all(months.map((month) => fetch(`/api/plan-assignments?month=${month}`, { cache: "no-store", signal: controller.signal })));
+        const assignments: MonthlyPlanAssignment[] = [];
+        for (const response of responses) {
+          const payload = await response.json() as { assignments?: MonthlyPlanAssignment[] };
+          if (!response.ok || !Array.isArray(payload.assignments)) throw new Error("No se pudo cargar el contexto de planes de la agenda.");
+          assignments.push(...payload.assignments);
+        }
+        setPlanAssignments(assignments);
+      } catch (error) {
+        if (!(error instanceof Error && error.name === "AbortError")) {
+          setPlanAssignments([]);
+          setPlanContextError(error instanceof Error ? error.message : "No se pudieron cargar los planes mensuales.");
+        }
+      }
+    }
+    void loadPlanAssignments();
+    return () => controller.abort();
+  }, [visibleMonthKey]);
+
+  useEffect(() => {
     setSelectedKey((current) => visibleSessions.some((session) => sessionKey(session) === current) ? current : visibleSessions[0] ? sessionKey(visibleSessions[0]) : "");
   }, [visibleSessions]);
 
@@ -240,7 +281,7 @@ export default function Home() {
   const dirtyCount = visibleSession?.students.filter((student) => attendanceByKey[`${visibleSession.id}:${visibleSession.date}:${student.id}`] !== undefined).length ?? 0;
   const hasChanges = dirtyCount > 0;
 
-  function setStudentStatus(studentId: string, status: AttendanceStatus) {
+  function setStudentStatus(studentId: string, status: Exclude<AttendanceStatus, "unmarked">) {
     if (!visibleSession || !selectedSession) return;
     const key = `${visibleSession.id}:${visibleSession.date}:${studentId}`;
     const savedStatus = selectedSession.students.find((student) => student.id === studentId)?.status;
@@ -253,7 +294,7 @@ export default function Home() {
     setSaveError(null);
   }
 
-  function setAllStatuses(status: AttendanceStatus) {
+  function setAllStatuses(status: Exclude<AttendanceStatus, "unmarked">) {
     if (!selectedSession) return;
     setAttendanceByKey((current) => {
       const next = { ...current };
@@ -487,13 +528,15 @@ export default function Home() {
       <NavButton active={tab === "agenda"} icon={<CalendarDays size={18} />} label="Agenda y asistencia" onClick={() => { setTab("agenda"); setMenuOpen(false); }} />
       <NavButton active={tab === "students"} icon={<Users size={18} />} label="Alumnas/os" onClick={() => { setTab("students"); setMenuOpen(false); }} />
       <NavButton active={tab === "classes"} icon={<Clock size={18} />} label="Clases semanales" onClick={() => { setTab("classes"); setMenuOpen(false); }} />
+      <NavButton active={tab === "plans"} icon={<Layers3 size={18} />} label="Planes" onClick={() => { setTab("plans"); setMenuOpen(false); }} />
     </nav>
     {loadError ? <Notice tone="error">No se pudo actualizar la información: {loadError}<button className="ml-auto font-semibold underline" onClick={() => void loadData()}>Reintentar</button></Notice> : null}
     {operationError ? <Notice tone="error">{operationError}<button className="ml-auto shrink-0" aria-label="Cerrar error" onClick={() => setOperationError(null)}><X size={17} /></button></Notice> : null}
     {operationNotice ? <Notice>{operationNotice}<button className="ml-auto shrink-0" aria-label="Cerrar aviso" onClick={() => setOperationNotice(null)}><X size={17} /></button></Notice> : null}
-    {tab === "agenda" ? <AgendaView {...{ sessions: visibleSessions, visibleSession, agendaMode, setAgendaMode, dayDate, setDayDate, weekStart, setWeekStart, rangeStart, setRangeStart, rangeEnd, setRangeEnd, validationError: agendaValidationError, isLoading, saveState, saveError, hasChanges, dirtyCount, presentCount, absentCount, attendanceByKey, selectedKey, setSelectedKey, moveWeek, setAllStatuses, discardChanges, saveAttendance, setStudentStatus }} /> : null}
+    {tab === "agenda" ? <AgendaView {...{ sessions: visibleSessions, visibleSession, agendaMode, setAgendaMode, dayDate, setDayDate, weekStart, setWeekStart, rangeStart, setRangeStart, rangeEnd, setRangeEnd, validationError: agendaValidationError, isLoading, saveState, saveError, hasChanges, dirtyCount, presentCount, absentCount, attendanceByKey, planAssignments, planContextError, selectedKey, setSelectedKey, moveWeek, setAllStatuses, discardChanges, saveAttendance, setStudentStatus }} /> : null}
     {tab === "students" ? <StudentsView students={students} archivedStudents={archivedStudents} classes={classes} isMutating={isMutating} onNew={() => openStudentEditor("new")} onEdit={openStudentEditor} onReenter={reenterStudent} /> : null}
     {tab === "classes" ? <ClassesView classes={classes} onNew={() => openClassEditor("new")} onEdit={openClassEditor} /> : null}
+    {tab === "plans" ? <PlanManagement /> : null}
     {studentEditor ? <StudentPanel student={studentEditor} classes={classes} isMutating={isMutating} error={editorError} notice={studentEditorNotice} onClose={() => { setStudentEditor(null); setStudentEditorNotice(null); }} onSave={saveStudent} onArchive={archiveStudent} /> : null}
     {classEditor ? <ClassPanel item={classEditor} isMutating={isMutating} error={editorError} onClose={() => setClassEditor(null)} onSave={saveClass} onDelete={deleteClass} /> : null}
   </main>;
@@ -529,17 +572,19 @@ type AgendaViewProps = {
   presentCount: number;
   absentCount: number;
   attendanceByKey: Record<string, AttendanceStatus>;
+  planAssignments: MonthlyPlanAssignment[];
+  planContextError: string | null;
   selectedKey: string;
   setSelectedKey: (key: string) => void;
   moveWeek: (direction: -1 | 1) => void;
-  setAllStatuses: (status: AttendanceStatus) => void;
+  setAllStatuses: (status: Exclude<AttendanceStatus, "unmarked">) => void;
   discardChanges: () => void;
   saveAttendance: () => void;
-  setStudentStatus: (id: string, status: AttendanceStatus) => void;
+  setStudentStatus: (id: string, status: Exclude<AttendanceStatus, "unmarked">) => void;
 };
 
 function AgendaView(props: AgendaViewProps) {
-  const { sessions, visibleSession, agendaMode, setAgendaMode, dayDate, setDayDate, weekStart, setWeekStart, rangeStart, setRangeStart, rangeEnd, setRangeEnd, validationError, isLoading, saveState, saveError, hasChanges, dirtyCount, presentCount, absentCount, attendanceByKey, selectedKey, setSelectedKey, moveWeek, setAllStatuses, discardChanges, saveAttendance, setStudentStatus } = props;
+  const { sessions, visibleSession, agendaMode, setAgendaMode, dayDate, setDayDate, weekStart, setWeekStart, rangeStart, setRangeStart, rangeEnd, setRangeEnd, validationError, isLoading, saveState, saveError, hasChanges, dirtyCount, presentCount, absentCount, attendanceByKey, planAssignments, planContextError, selectedKey, setSelectedKey, moveWeek, setAllStatuses, discardChanges, saveAttendance, setStudentStatus } = props;
   return <section>
     <div className="agenda-controls shadow-soft">
       <div className="agenda-view-switch" aria-label="Vista de agenda">
@@ -549,13 +594,18 @@ function AgendaView(props: AgendaViewProps) {
       {agendaMode === "week" ? <div className="week-control"><button className="icon-button" aria-label="Semana anterior" disabled={!isIsoDate(weekStart)} onClick={() => moveWeek(-1)}><ChevronLeft size={20} /></button><DateControl label="Fecha dentro de la semana" value={weekStart} onChange={setWeekStart} /><button className="icon-button" aria-label="Semana siguiente" disabled={!isIsoDate(weekStart)} onClick={() => moveWeek(1)}><ChevronRight size={20} /></button></div> : null}
       {agendaMode === "range" ? <div className="range-controls"><DateControl label="Fecha inicial" value={rangeStart} onChange={setRangeStart} /><DateControl label="Fecha final" value={rangeEnd} onChange={setRangeEnd} /></div> : null}
       {validationError ? <Notice tone="error">{validationError}</Notice> : null}
+      {planContextError ? <Notice tone="error">{planContextError} La asistencia sigue disponible, pero el pool mensual no puede mostrarse por ahora.</Notice> : null}
     </div>
     <div className="mt-5 grid min-w-0 gap-5 lg:grid-cols-[minmax(260px,340px)_minmax(0,1fr)]">
       <div className={clsx("min-w-0 space-y-3", isLoading && "opacity-60")} aria-busy={isLoading}>
         {sessions.map((session) => <button key={sessionKey(session)} className={clsx("class-card", selectedKey === sessionKey(session) && "class-card-active")} onClick={() => setSelectedKey(sessionKey(session))} type="button"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="eyebrow text-moss">{weekdayLabels[session.weekday]} · {formatShortDate(session.date)}</p><h2 className="mt-1 truncate text-lg font-semibold text-ink">{session.title}</h2></div><span className="count-pill">{session.students.filter((student) => (attendanceByKey[`${session.id}:${session.date}:${student.id}`] ?? student.status) === "present").length}/{session.students.length}</span></div><p className="mt-3 flex items-center gap-2 text-sm text-ink/65"><Clock size={16} />{session.time} <span>·</span> {session.durationMinutes} min</p></button>)}
         {!isLoading && !validationError && sessions.length === 0 ? <EmptyState label="No hay clases en las fechas elegidas." /> : null}
       </div>
-      {visibleSession ? <section className="min-w-0 rounded-2xl bg-white p-4 shadow-soft sm:p-6"><div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div className="min-w-0"><p className="eyebrow text-moss">{weekdayLabels[visibleSession.weekday]} · {formatShortDate(visibleSession.date)} · {visibleSession.time}</p><h2 className="mt-1 text-2xl font-semibold text-ink">{visibleSession.title}</h2><p className="mt-1 text-sm text-ink/65">{visibleSession.teacher} · {visibleSession.durationMinutes} min · {visibleSession.room} · cupo {visibleSession.capacity}</p></div><div className="grid grid-cols-3 gap-2 sm:min-w-64"><Metric label="Presentes" value={presentCount} tone="moss" /><Metric label="Ausentes" value={absentCount} tone="clay" /><Metric label="Pendientes" value={visibleSession.students.length - presentCount - absentCount} tone="ink" /></div></div><Notice tone={saveState === "error" ? "error" : "info"}>{saveState === "saving" ? "Guardando asistencia…" : saveState === "saved" ? "Asistencia guardada correctamente." : saveState === "error" ? saveError ?? "No se pudo guardar. Revisá la conexión e intentá nuevamente." : hasChanges ? `${dirtyCount} ${dirtyCount === 1 ? "cambio pendiente" : "cambios pendientes"} de guardar.` : "La asistencia está al día."}</Notice><div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto_auto]"><button className="action-button action-button-soft" disabled={saveState === "saving"} onClick={() => setAllStatuses("present")}><CheckCheck size={18} />Marcar todos presentes</button><button className="action-button action-button-light" disabled={!hasChanges || saveState === "saving"} onClick={discardChanges}><RotateCcw size={17} />Deshacer</button><button className="action-button action-button-dark" disabled={!hasChanges || saveState === "saving"} onClick={saveAttendance}>{saveState === "saving" ? <LoaderCircle className="animate-spin" size={17} /> : <Save size={17} />}{saveState === "saving" ? "Guardando" : "Guardar cambios"}</button></div><div className="mt-5 space-y-3">{visibleSession.students.map((student) => <article className="student-attendance" key={student.id}><div className="flex items-start justify-between gap-3"><div className="min-w-0"><h3 className="truncate font-semibold text-ink">{student.name}</h3><p className="mt-1 text-sm text-ink/60">{student.phone}</p>{student.notes ? <p className="mt-2 text-sm text-clay">{student.notes}</p> : null}</div><span className={clsx("status-chip", `status-${student.status}`)}>{statusCopy[student.status]}</span></div><div className="mt-3 grid grid-cols-3 gap-2"><StatusButton active={student.status === "present"} icon={<Check size={17} />} label="Presente" onClick={() => setStudentStatus(student.id, "present")} tone="present" /><StatusButton active={student.status === "absent"} icon={<X size={17} />} label="Ausente" onClick={() => setStudentStatus(student.id, "absent")} tone="absent" /><StatusButton active={student.status === "unmarked"} icon={<UserCheck size={17} />} label="Pendiente" onClick={() => setStudentStatus(student.id, "unmarked")} tone="unmarked" /></div></article>)}</div></section> : <div className="empty-state min-h-64"><CalendarDays size={28} className="text-moss" /><p>Elegí fechas con clases para tomar asistencia.</p></div>}
+      {visibleSession ? <section className="min-w-0 rounded-2xl bg-white p-4 shadow-soft sm:p-6"><div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div className="min-w-0"><p className="eyebrow text-moss">{weekdayLabels[visibleSession.weekday]} · {formatShortDate(visibleSession.date)} · {visibleSession.time}</p><h2 className="mt-1 text-2xl font-semibold text-ink">{visibleSession.title}</h2><p className="mt-1 text-sm text-ink/65">{visibleSession.teacher} · {visibleSession.durationMinutes} min · {visibleSession.room} · cupo {visibleSession.capacity}</p></div><div className="grid grid-cols-3 gap-2 sm:min-w-64"><Metric label="Presentes" value={presentCount} tone="moss" /><Metric label="Ausentes" value={absentCount} tone="clay" /><Metric label="Sin registrar" value={visibleSession.students.length - presentCount - absentCount} tone="ink" /></div></div><Notice tone={saveState === "error" ? "error" : "info"}>{saveState === "saving" ? "Guardando asistencia…" : saveState === "saved" ? "Asistencia guardada correctamente." : saveState === "error" ? saveError ?? "No se pudo guardar. Revisá la conexión e intentá nuevamente." : hasChanges ? `${dirtyCount} ${dirtyCount === 1 ? "cambio pendiente" : "cambios pendientes"} de guardar.` : "La asistencia está al día."}</Notice><div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto_auto]"><button className="action-button action-button-soft" disabled={saveState === "saving"} onClick={() => setAllStatuses("present")}><CheckCheck size={18} />Marcar todos presentes</button><button className="action-button action-button-light" disabled={!hasChanges || saveState === "saving"} onClick={discardChanges}><RotateCcw size={17} />Deshacer</button><button className="action-button action-button-dark" disabled={!hasChanges || saveState === "saving"} onClick={saveAttendance}>{saveState === "saving" ? <LoaderCircle className="animate-spin" size={17} /> : <Save size={17} />}{saveState === "saving" ? "Guardando" : "Guardar cambios"}</button></div><div className="mt-5 space-y-3">{visibleSession.students.map((student) => {
+        const assignment = planAssignments.find((item) => item.studentId === student.id && item.month === visibleSession.date.slice(0, 7));
+        const planSession = assignment?.sessions.find((item) => item.classId === visibleSession.id && item.date === visibleSession.date);
+        return <article className="student-attendance" key={student.id}><div className="flex items-start justify-between gap-3"><div className="min-w-0"><h3 className="truncate font-semibold text-ink">{student.name}</h3><p className="mt-1 text-sm text-ink/60">{student.phone}</p>{assignment ? <p className="mt-2 text-xs font-semibold text-moss">{assignment.planName} · {assignment.usedCount}/{assignment.classLimit} utilizadas</p> : <p className="mt-2 text-xs font-semibold text-clay">Sin plan mensual</p>}{student.notes ? <p className="mt-2 text-sm text-clay">{student.notes}</p> : null}</div><div className="flex flex-col items-end gap-1.5"><span className={clsx("status-chip", `status-${student.status}`)}>{attendanceLabel(student.status, visibleSession.date)}</span>{planSession && !planSession.included ? <span className="status-chip status-outside">Fuera del plan</span> : null}</div></div><div className="mt-3 grid grid-cols-2 gap-2"><StatusButton active={student.status === "present"} icon={<Check size={17} />} label="Presente" onClick={() => setStudentStatus(student.id, "present")} tone="present" /><StatusButton active={student.status === "absent"} icon={<X size={17} />} label="Ausente" onClick={() => setStudentStatus(student.id, "absent")} tone="absent" /></div></article>;
+      })}</div></section> : <div className="empty-state min-h-64"><CalendarDays size={28} className="text-moss" /><p>Elegí fechas con clases para tomar asistencia.</p></div>}
     </div>
   </section>;
 }
@@ -601,7 +651,19 @@ function StudentPanel({ student, classes, isMutating, error, notice, onClose, on
   const existing = student !== "new" ? student : null;
   const previous = existing ? classes.filter((item) => item.studentIds.includes(existing.id)).map((item) => item.id) : [];
   const [selected, setSelected] = useState(previous);
-  return <Panel title={existing ? existing.name : "Nuevo ingreso"} description="El teléfono y las notas son solo para uso administrativo." onClose={onClose}><form className="panel-content" onSubmit={(event) => onSave(event, selected)}><Field label="Nombre y apellido" name="name" defaultValue={existing?.name} /><Field label="Teléfono" name="phone" defaultValue={existing?.phone} type="tel" /><Field label="Notas" name="notes" defaultValue={existing?.notes} required={false} />{notice ? <Notice>{notice}</Notice> : null}<div><p className="field-label">Horarios actuales</p><p className="field-help">Podés agregar o quitar horarios. Al quitar uno se cierran solo las asignaciones futuras; la asistencia anterior no se borra.</p><div className="check-list">{classes.map((item) => <label className="check-row" key={item.id}><input type="checkbox" checked={selected.includes(item.id)} onChange={(event) => setSelected((current) => event.target.checked ? [...current, item.id] : current.filter((id) => id !== item.id))} /><span className="min-w-0"><strong>{weekdayLabels[item.weekday]} · {item.time}</strong><small>{item.title} · {item.studentIds.length}/{item.capacity} lugares</small></span></label>)}</div>{classes.length === 0 ? <p className="text-sm text-ink/55">Creá una clase semanal para poder asignar horarios.</p> : null}</div>{error ? <Notice tone="error">{error}</Notice> : null}<div className="panel-actions"><button className="action-button action-button-light" type="button" onClick={onClose}>Cancelar</button><button className="action-button action-button-dark" disabled={isMutating} type="submit">{isMutating ? <LoaderCircle className="animate-spin" size={17} /> : <Save size={17} />}Guardar datos y horarios</button></div></form>{existing ? <div className="panel-footer"><button className="danger-button" disabled={isMutating} onClick={() => onArchive(existing)} type="button"><Archive size={17} />Archivar alumna/o</button><span>Conserva todo el historial</span></div> : null}</Panel>;
+  return <Panel title={existing ? existing.name : "Nuevo ingreso"} description="El teléfono y las notas son solo para uso administrativo." onClose={onClose}>
+    <form className="panel-content" onSubmit={(event) => onSave(event, selected)}>
+      <Field label="Nombre y apellido" name="name" defaultValue={existing?.name} />
+      <Field label="Teléfono" name="phone" defaultValue={existing?.phone} type="tel" />
+      <Field label="Notas" name="notes" defaultValue={existing?.notes} required={false} />
+      {notice ? <Notice>{notice}</Notice> : null}
+      <div><p className="field-label">Horarios actuales</p><p className="field-help">Podés agregar o quitar horarios. Al quitar uno se cierran solo las asignaciones futuras; la asistencia anterior no se borra.</p><div className="check-list">{classes.map((item) => <label className="check-row" key={item.id}><input type="checkbox" checked={selected.includes(item.id)} onChange={(event) => setSelected((current) => event.target.checked ? [...current, item.id] : current.filter((id) => id !== item.id))} /><span className="min-w-0"><strong>{weekdayLabels[item.weekday]} · {item.time}</strong><small>{item.title} · {item.studentIds.length}/{item.capacity} lugares</small></span></label>)}</div>{classes.length === 0 ? <p className="text-sm text-ink/55">Creá una clase semanal para poder asignar horarios.</p> : null}</div>
+      {error ? <Notice tone="error">{error}</Notice> : null}
+      <div className="panel-actions"><button className="action-button action-button-light" type="button" onClick={onClose}>Cancelar</button><button className="action-button action-button-dark" disabled={isMutating} type="submit">{isMutating ? <LoaderCircle className="animate-spin" size={17} /> : <Save size={17} />}Guardar datos y horarios</button></div>
+    </form>
+    {existing ? <StudentPlanSection studentId={existing.id} classes={classes} /> : <div className="notice"><Layers3 size={18} />Guardá primero el nuevo ingreso para poder asignarle un plan mensual.</div>}
+    {existing ? <div className="panel-footer"><button className="danger-button" disabled={isMutating} onClick={() => onArchive(existing)} type="button"><Archive size={17} />Archivar alumna/o</button><span>Conserva todo el historial</span></div> : null}
+  </Panel>;
 }
 
 function ClassPanel({ item, isMutating, error, onClose, onSave, onDelete }: { item: WeeklyClass | "new"; isMutating: boolean; error: string | null; onClose: () => void; onSave: (event: FormEvent<HTMLFormElement>) => void; onDelete: (item: WeeklyClass) => void }) {
