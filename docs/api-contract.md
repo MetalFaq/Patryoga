@@ -10,7 +10,9 @@ mantener este comportamiento salvo un cambio coordinado del contrato.
 - Horas de clases: texto `HH:mm`.
 - Respuestas y solicitudes: JSON con `Content-Type: application/json`.
 - Errores: `{ "error": "descripcion" }` con un estado HTTP adecuado.
-- Estados de asistencia: `present`, `absent` o `unmarked`.
+- Estados persistidos de asistencia: `present`, `absent` o `unmarked`.
+- Los clientes solo pueden guardar `present` o `absent`; `unmarked` representa
+  una sesion sin registrar y no es una opcion editable.
 - `dataSource` es informativo durante la transicion desde mocks.
 - Las plantillas activas solo admiten dias de lunes a viernes.
 - La profesora y la sala son valores fijos del servidor: `Patricia` y
@@ -55,6 +57,40 @@ type WeeklyClass = {
 type ClassSession = WeeklyClass & {
   date: string;
   students: Array<Student & {
+    status: "present" | "absent" | "unmarked";
+  }>;
+};
+
+type MembershipPlan = {
+  id: string;
+  name: string;
+  classLimit: number;
+  description?: string;
+  active: boolean;
+};
+
+type MonthlyPlanAssignment = {
+  id: string;
+  studentId: string;
+  month: string;
+  planId: string;
+  planName: string;
+  planDescription?: string;
+  mode: "full" | "prorated";
+  effectiveFrom: string;
+  periodStart: string;
+  periodEnd: string;
+  classLimit: number;
+  scheduledCount: number;
+  usedCount: number;
+  presentCount: number;
+  absentCount: number;
+  remainingCount: number;
+  sessions: Array<{
+    classId: string;
+    date: string;
+    position: number;
+    included: boolean;
     status: "present" | "absent" | "unmarked";
   }>;
 };
@@ -216,6 +252,96 @@ periodo anterior. Toda la operacion conserva atomicidad cuando incluye varias
 clases. Si un periodo nuevo todavia no entro en vigencia, una baja inmediata lo
 cancela sin alterar ningun periodo historico efectivo.
 
+## Catalogo de planes mensuales
+
+### `GET /api/plans`
+
+Devuelve planes. La consulta opcional `status` acepta `active`, `inactive` o
+`all`; el valor predeterminado es `active`.
+
+- `200`: `{ "dataSource": "runtime", "plans": MembershipPlan[] }`.
+- `400`: `status` invalido o repetido.
+
+### `POST /api/plans`
+
+Crea un plan. Requiere `name` no vacio y `classLimit` entero positivo;
+`description` e `id` son opcionales. El servidor genera el identificador si no
+se envia.
+
+- `201`: `{ "dataSource": "runtime", "plan": MembershipPlan }`.
+- `400`: cuerpo o campos invalidos.
+- `409`: identificador o nombre activo duplicado.
+
+### `PATCH /api/plans/:planId`
+
+Actualiza al menos uno de `name`, `classLimit`, `description` o `active`. Los
+cambios solo afectan asignaciones futuras porque cada asignacion mensual guarda
+un snapshot del plan.
+
+- `200`: `{ "dataSource": "runtime", "plan": MembershipPlan }`.
+- `400`: cuerpo vacio o campos invalidos.
+- `404`: plan inexistente.
+- `409`: nombre activo duplicado.
+
+Los planes iniciales son `Plan 4 clases` y `Plan 8 clases`. Un plan usado no se
+borra: se desactiva y permanece disponible para historial.
+
+## Asignaciones mensuales de planes
+
+### `GET /api/plan-assignments`
+
+Requiere `month=YYYY-MM`. Acepta opcionalmente un unico `studentId`. Devuelve
+las asignaciones mensuales con sus sesiones snapshot y progreso calculado.
+
+- `200`: `{ "dataSource": "runtime", "assignments": MonthlyPlanAssignment[] }`.
+- `400`: mes o parametros invalidos.
+- `404`: alumna/o inexistente cuando se solicita `studentId`.
+
+### `PUT /api/plan-assignments/:studentId/:month`
+
+Crea o reemplaza la asignacion unica de una alumna/o para el mes indicado.
+
+Plan completo:
+
+```json
+{ "planId": "plan-8", "mode": "full" }
+```
+
+Plan proporcional:
+
+```json
+{
+  "planId": "plan-8",
+  "mode": "prorated",
+  "effectiveFrom": "2026-08-17"
+}
+```
+
+Reglas:
+
+- El mes va desde su primer lunes a viernes hasta su ultimo lunes a viernes.
+- No se descuentan feriados en esta primera version.
+- `effectiveFrom` debe pertenecer al mes y no superar su ultimo dia habil.
+- En modo completo, el cupo snapshot es el limite del plan y la vigencia inicia
+  el primer dia habil.
+- En modo proporcional, el cupo es el menor valor entre el limite del plan y
+  las sesiones habituales disponibles desde `effectiveFrom`.
+- Las sesiones se ordenan por fecha, hora e identificador. Las primeras hasta
+  alcanzar el cupo quedan `included: true`; las adicionales quedan fuera.
+- El calculo usa los horarios habituales vigentes y guarda las sesiones como
+  snapshot. Cambiar horarios despues no reescribe el plan mensual.
+- Presente y ausente consumen cupo. `unmarked` no consume cupo.
+- Reemplazar una asignacion con asistencias ya registradas para alguna de sus
+  sesiones se rechaza para no reescribir historia.
+
+Respuestas:
+
+- `200`: `{ "dataSource": "runtime", "assignment": MonthlyPlanAssignment }`.
+- `400`: cuerpo, mes, modalidad o fecha invalidos.
+- `404`: alumna/o o plan inexistente.
+- `409`: alumna/o archivado, plan inactivo, ausencia de sesiones habituales o
+  intento de reemplazar un mes que ya tiene asistencias.
+
 ## `GET /api/classes/:classId/attendance`
 
 Devuelve una sesion y el estado de sus alumnas asignadas.
@@ -280,7 +406,8 @@ Validaciones:
 - Cada alumna debe estar asignada a la clase.
 - El periodo de asignacion debe incluir la fecha indicada; una asignacion actual
   no autoriza a cargar asistencia en fechas anteriores a su alta.
-- Cada estado debe pertenecer al conjunto permitido.
+- Solo se aceptan `present` y `absent`; `unmarked` se obtiene al no existir un
+  registro y no puede guardarse desde la interfaz.
 - Una alumna no puede repetirse dentro de la misma solicitud.
 - La solicitud se valida completa antes de guardar cualquier entrada.
 

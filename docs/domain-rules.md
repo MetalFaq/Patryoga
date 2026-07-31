@@ -55,7 +55,9 @@
 ## Asistencias
 
 - La identidad es `(classId, date, studentId)` y debe ser unica.
-- Los estados permitidos son `present`, `absent` y `unmarked`.
+- Los estados persistidos son `present`, `absent` y `unmarked`, pero la
+  administradora solo elige `present` o `absent`. `unmarked` significa que una
+  fecha pasada sigue sin registrar o que una fecha futura esta programada.
 - La administradora puede crear o corregir asistencias de fechas pasadas.
 - No hay una restriccion inicial para fechas futuras; cualquier fecha ISO valida
   es aceptada hasta que producto defina otra regla.
@@ -66,6 +68,29 @@
   identidad reemplaza al anterior; inicialmente rige "ultima escritura gana".
 - Una solicitud con cualquier entrada invalida se rechaza completa y no debe
   aplicar cambios parciales.
+
+## Planes mensuales
+
+- El catalogo comienza con planes de 4 y 8 clases y admite planes futuros con
+  cualquier limite entero positivo.
+- Los planes usados no se eliminan; se desactivan para preservar referencias e
+  historial.
+- Cada alumna/o tiene como maximo una asignacion de plan por mes calendario.
+- El periodo comienza el primer dia de lunes a viernes y termina el ultimo dia
+  de lunes a viernes del mes. Los feriados no se excluyen inicialmente.
+- Una asignacion guarda nombre, descripcion y limite del plan como snapshot;
+  editar el catalogo no cambia meses anteriores.
+- El modo completo conserva el limite original. El modo proporcional calcula
+  un cupo igual al menor valor entre el limite original y las sesiones
+  habituales restantes desde su fecha de ingreso.
+- Las sesiones elegibles se ordenan por fecha y hora. Las primeras hasta
+  alcanzar el cupo pertenecen al pool; las restantes quedan fuera del plan.
+- Tanto `present` como `absent` consumen una clase. `unmarked` no consume.
+- Las sesiones futuras permanecen programadas y no se consideran consumidas.
+- Las sesiones y horarios usados para calcular el pool se guardan como snapshot
+  mensual, de modo que cambios posteriores de horarios no reescriban historia.
+- Un plan mensual que ya posee al menos una asistencia no puede reemplazarse.
+- Los pagos y precios quedan fuera de esta etapa.
 
 ## Historial y persistencia
 
