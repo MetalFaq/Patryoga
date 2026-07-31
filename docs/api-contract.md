@@ -217,11 +217,11 @@ de forma transaccional sin aplicar cambios parciales.
 
 Elimina la plantilla de la operacion habitual:
 
-- si no tiene asistencias guardadas, borra definitivamente la plantilla y sus
-  asignaciones;
-- si tiene al menos una asistencia, la deja inactiva, cierra sus asignaciones
-  vigentes y conserva la plantilla, las asignaciones y asistencias necesarias
-  para consultar el historial.
+- si no tiene asistencias ni sesiones guardadas en un plan mensual, borra
+  definitivamente la plantilla y sus asignaciones;
+- si tiene al menos una asistencia o aparece en el snapshot de un plan mensual,
+  la deja inactiva, cierra sus asignaciones vigentes y conserva la plantilla,
+  las asignaciones, el pool y las asistencias necesarias para el historial.
 
 - `204`: eliminacion o retiro de agenda aplicado.
 - `404`: la clase no existe.

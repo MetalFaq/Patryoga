@@ -15,9 +15,10 @@
   consideran solapados.
 - La comprobacion de solapamiento de altas y ediciones se serializa dentro de
   la transaccion para impedir que solicitudes concurrentes creen conflictos.
-- Eliminar una plantilla sin asistencias la borra definitivamente junto con sus
-  asignaciones. Si tiene asistencias, se la retira de agendas futuras, se
-  cierran sus asignaciones activas y se conserva el historial.
+- Eliminar una plantilla sin asistencias ni referencias en planes mensuales la
+  borra definitivamente junto con sus asignaciones. Si tiene asistencias o
+  pertenece al snapshot de un plan, se la retira de agendas futuras, se cierran
+  sus asignaciones activas y se conserva el historial.
 - Cambiar una plantilla no debe borrar asistencias historicas.
 
 ## Alumnas
