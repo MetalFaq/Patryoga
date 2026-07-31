@@ -15,7 +15,7 @@ type RouteContext = {
   }>;
 };
 
-const attendanceStatuses = new Set<AttendanceStatus>(["present", "absent", "unmarked"]);
+const attendanceStatuses = new Set<AttendanceStatus>(["present", "absent"]);
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";

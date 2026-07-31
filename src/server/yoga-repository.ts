@@ -322,6 +322,8 @@ export async function deleteClass(classId: string): Promise<void> {
     const history = await client.query<{ exists: boolean }>(`
       SELECT EXISTS (
         SELECT 1 FROM attendance_records WHERE class_id = $1
+        UNION ALL
+        SELECT 1 FROM monthly_plan_sessions WHERE class_id = $1
       ) AS exists
     `, [classId]);
 

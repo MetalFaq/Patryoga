@@ -57,6 +57,54 @@ CREATE TABLE IF NOT EXISTS attendance_records (
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE RESTRICT
 );
 
+CREATE TABLE IF NOT EXISTS membership_plans (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  class_limit INTEGER NOT NULL CHECK (class_limit > 0),
+  description TEXT,
+  active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS membership_plans_active_name_idx
+  ON membership_plans (lower(name))
+  WHERE active;
+
+CREATE TABLE IF NOT EXISTS monthly_plan_assignments (
+  id TEXT PRIMARY KEY,
+  student_id TEXT NOT NULL REFERENCES students(id) ON DELETE RESTRICT,
+  month DATE NOT NULL CHECK (EXTRACT(DAY FROM month) = 1),
+  plan_id TEXT NOT NULL REFERENCES membership_plans(id) ON DELETE RESTRICT,
+  plan_name TEXT NOT NULL,
+  plan_description TEXT,
+  mode TEXT NOT NULL CHECK (mode IN ('full', 'prorated')),
+  effective_from DATE NOT NULL,
+  period_start DATE NOT NULL,
+  period_end DATE NOT NULL,
+  class_limit INTEGER NOT NULL CHECK (class_limit > 0),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (student_id, month),
+  CHECK (period_start <= effective_from AND effective_from <= period_end)
+);
+
+CREATE TABLE IF NOT EXISTS monthly_plan_sessions (
+  assignment_id TEXT NOT NULL
+    REFERENCES monthly_plan_assignments(id) ON DELETE CASCADE,
+  class_id TEXT NOT NULL,
+  class_title TEXT NOT NULL,
+  weekday TEXT NOT NULL CHECK (
+    weekday IN ('monday', 'tuesday', 'wednesday', 'thursday', 'friday')
+  ),
+  start_time TIME NOT NULL,
+  session_date DATE NOT NULL,
+  position INTEGER NOT NULL CHECK (position > 0),
+  included BOOLEAN NOT NULL,
+  PRIMARY KEY (assignment_id, class_id, session_date),
+  UNIQUE (assignment_id, position)
+);
+
 -- Upgrade databases created with the initial single-period enrollment model.
 -- Historical Saturday templates remain readable, but the NOT VALID constraint
 -- rejects any new Saturday class without rewriting past records.
@@ -117,6 +165,12 @@ CREATE UNIQUE INDEX IF NOT EXISTS class_enrollments_one_active_period_idx
 CREATE INDEX IF NOT EXISTS attendance_records_session_idx
   ON attendance_records (session_date, class_id);
 
+CREATE INDEX IF NOT EXISTS monthly_plan_assignments_month_idx
+  ON monthly_plan_assignments (month, student_id);
+
+CREATE INDEX IF NOT EXISTS monthly_plan_sessions_lookup_idx
+  ON monthly_plan_sessions (class_id, session_date, assignment_id);
+
 INSERT INTO students (id, full_name, phone, notes) VALUES
   ('stu-ana', 'Ana Molina', '+54 11 5555-0101', 'Prefiere turno manana.'),
   ('stu-clara', 'Clara Perez', '+54 11 5555-0102', NULL),
@@ -172,5 +226,10 @@ INSERT INTO attendance_records (class_id, student_id, session_date, status) VALU
   ('class-jue-1000', 'stu-nora', '2026-07-23', 'absent'),
   ('class-vie-0930', 'stu-paula', '2026-07-24', 'present')
 ON CONFLICT (class_id, student_id, session_date) DO NOTHING;
+
+INSERT INTO membership_plans (id, name, class_limit, description) VALUES
+  ('plan-4', 'Plan 4 clases', 4, 'Cuatro clases mensuales.'),
+  ('plan-8', 'Plan 8 clases', 8, 'Ocho clases mensuales.')
+ON CONFLICT (id) DO NOTHING;
 
 COMMIT;
