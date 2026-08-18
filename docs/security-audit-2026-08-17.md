@@ -18,6 +18,27 @@ registrado en Google y el inicio de sesión HTTPS real fue validado.
 Este resultado no equivale a un pentest ni garantiza que no existan
 vulnerabilidades todavía no publicadas.
 
+## Primera fase de endurecimiento — 18 de agosto de 2026
+
+La primera ola aplica controles de bajo riesgo y deja fuera, de forma
+deliberada, los cambios de roles PostgreSQL, ACL, backups y rate limiting:
+
+- `/api/health` es liveness de proceso, no consulta PostgreSQL y responde con
+  `Cache-Control: no-store`;
+- todas las respuestas incorporan HSTS, `nosniff`, anti-framing,
+  Referrer-Policy y Permissions-Policy;
+- la CSP comienza como `Content-Security-Policy-Report-Only` para observar
+  incompatibilidades con Next.js y OAuth antes de hacerla obligatoria;
+- los logs `json-file` de app, migraciones y base rotan a 10 MB y conservan
+  tres archivos por contenedor;
+- `app` elimina capabilities Linux y activa `no-new-privileges`; no se aplica
+  filesystem de solo lectura hasta validar las escrituras necesarias del
+  runtime.
+
+El endpoint público no demuestra disponibilidad de PostgreSQL. La readiness de
+base se comprueba con el healthcheck propio de `db`; no se agregó una nueva
+ruta pública de diagnóstico.
+
 ## Hallazgos npm iniciales y resolución
 
 La primera consulta detectó seis vulnerabilidades altas y ninguna crítica:
@@ -49,12 +70,12 @@ etiquetas OCI de origen, versión, revisión y fecha.
 | Hallazgo | Riesgo | Recomendación |
 | --- | --- | --- |
 | No hay rate limiting | Tráfico abusivo puede consumir recursos o presionar login/API | Limitar por IP y ruta; evaluar protección perimetral antes de producción |
-| `/api/health` es público y ejecuta `SELECT 1` | Cada solicitud pública genera trabajo contra PostgreSQL | Separar salud superficial pública de readiness interna y aplicar límites |
+| `/api/health` era público y ejecutaba `SELECT 1` | Cada solicitud pública generaba trabajo contra PostgreSQL | **Resuelto en fase 1:** liveness barato sin acceso a DB; readiness queda en el healthcheck interno de `db` |
 | El rol runtime de PostgreSQL es superusuario | Una inyección o compromiso de app tendría privilegios excesivos | Crear rol de aplicación sin superuser y rol separado para migraciones |
 | ACL local de `.env` y backups demasiado amplia | Otros usuarios o procesos locales podrían leer secretos y datos | Restringir permisos al usuario operador y cuentas de servicio necesarias |
 | Backups sólo locales y manuales | Falla o pérdida del equipo puede eliminar servicio y respaldo | Automatizar copia cifrada fuera del host, retención y restauraciones periódicas |
-| Faltan headers CSP, X-Frame-Options, HSTS, nosniff, Referrer-Policy y Permissions-Policy | Menor defensa del navegador frente a inyección, framing y fuga de contexto | Definirlos en Next.js/proxy y verificar login/callback antes de exigirlos |
-| Logs sin rotación, request IDs, métricas ni alertas | Diagnóstico tardío, disco creciente y poca correlación de incidentes | Agregar rotación, IDs, métricas de salud y alertas sin datos personales |
+| Faltaban headers CSP, X-Frame-Options, HSTS, nosniff, Referrer-Policy y Permissions-Policy | Menor defensa del navegador frente a inyección, framing y fuga de contexto | **Parcialmente resuelto en fase 1:** headers activos y CSP Report-Only; falta observarla y decidir enforcement |
+| Logs sin request IDs, métricas ni alertas | Diagnóstico tardío y poca correlación de incidentes | La rotación quedó resuelta en fase 1; agregar IDs, métricas de salud y alertas sin datos personales |
 | Docker Desktop depende de la sesión Windows | Cerrar sesión o reiniciar puede dejar el servicio fuera de línea | Documentar recuperación y migrar a servicio/host dedicado después de adopción |
 | No se escanearon CVE del sistema operativo de la imagen | `npm audit` no cubre Alpine, Node ni binarios nativos | Incorporar escaneo de imagen en CI y revisar el digest de la imagen base |
 
@@ -65,8 +86,8 @@ etiquetas OCI de origen, versión, revisión y fecha.
   planificada.
 - Seguir la madurez de Auth.js beta, revisar duración/rotación de sesión y
   planificar una versión estable.
-- Endurecer contenedores con filesystem de sólo lectura, capabilities mínimas,
-  límites de CPU/memoria y perfiles adecuados.
+- `app` ya usa capabilities mínimas y `no-new-privileges`; evaluar filesystem
+  de sólo lectura, límites de CPU/memoria y perfiles adicionales.
 - Limitar tamaño de payload, definir timeouts y validar política de `Origin` en
   escrituras sensibles.
 - Verificar BitLocker y las ACL/políticas de la tailnet; no se consideran

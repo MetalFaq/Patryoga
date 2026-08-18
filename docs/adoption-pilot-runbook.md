@@ -37,7 +37,10 @@ IDs de cuenta ni ubicación o hash de los respaldos.
    Invoke-RestMethod http://localhost:3000/api/health
    ```
 
-   La respuesta esperada es `status: ok`.
+   La respuesta esperada es `status: ok`. Este endpoint confirma que el proceso
+   web responde; no consulta PostgreSQL. La disponibilidad de la base se valida
+   por separado comprobando que `db` figure como `healthy` en
+   `docker compose ps`.
 7. Ejecutar `tailscale status` y `tailscale funnel status`. El Funnel existente
    debe apuntar a la aplicación local; no crear otro hostname para un arranque
    normal.
@@ -63,6 +66,9 @@ docker compose logs --since 15m db
 ```
 
 No copiar logs completos a chats públicos: podrían contener datos operativos.
+Compose rota automáticamente los logs de cada contenedor al alcanzar 10 MB y
+conserva hasta tres archivos. Esta rotación limita uso de disco, pero no
+reemplaza alertas ni backups.
 
 ## Diagnóstico por síntoma
 
@@ -70,7 +76,7 @@ No copiar logs completos a chats públicos: podrían contener datos operativos.
 | --- | --- | --- |
 | No abre la URL pública | Probar `/api/health` local y `tailscale funnel status` | Si local funciona, revisar internet y el servicio Tailscale |
 | Local tampoco responde | `docker compose ps` | Revisar salud y logs antes de reiniciar |
-| `db` no está saludable | `docker compose logs --since 15m db` | No borrar el volumen; detener el diagnóstico si aparecen errores de datos o credenciales |
+| `/api/health` responde pero `db` no está saludable | `docker compose ps` y `docker compose logs --since 15m db` | El proceso web está vivo, pero la operación puede fallar; no borrar el volumen y detener el diagnóstico si aparecen errores de datos o credenciales |
 | `app` no está saludable | `docker compose logs --since 15m app` | Confirmar que `migrate` terminó y que la base está saludable |
 | Google rechaza el callback | Comparar el origen público con `AUTH_URL` y la URI autorizada de Google | Corregir sólo la configuración; recrear únicamente `app` |
 | La API devuelve 401 | Verificar sesión y cuenta autorizada | Cerrar sesión y entrar con la cuenta correcta |

@@ -1,3 +1,9 @@
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   app:
     image: patryoga:${IMAGE_TAG:-local}
@@ -11,6 +17,11 @@ services:
       migrate:
         condition: service_completed_successfully
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging: *default-logging
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       NEXT_PUBLIC_APP_ENV: local
@@ -35,6 +46,7 @@ services:
       db:
         condition: service_healthy
     restart: "no"
+    logging: *default-logging
     environment:
       PGHOST: db
       PGPORT: 5432
@@ -48,6 +60,7 @@ services:
   db:
     image: postgres:16-alpine
     restart: unless-stopped
+    logging: *default-logging
     environment:
       POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in .env}
       POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env}

@@ -13,13 +13,13 @@ garantizada.
 | Riesgo | Impacto | Control actual | Pendiente antes de producción |
 | --- | --- | --- | --- |
 | Corte de luz, internet, reinicio o suspensión | La app queda fuera de servicio | Equipo conectado, sin suspensión/hibernación y verificación diaria | Host dedicado o nube, alertas y recuperación automática |
-| URL pública descubierta o tráfico abusivo | Consumo de CPU, memoria o ancho de banda | OAuth, API protegida y límites del Funnel | Rate limiting, WAF, métricas y alertas |
+| URL pública descubierta o tráfico abusivo | Consumo de CPU, memoria o ancho de banda | OAuth, API protegida, health sin DB, headers defensivos y límites del Funnel | Rate limiting, WAF, métricas y alertas |
 | Cuenta Google autorizada comprometida | Acceso administrativo a datos | Correo verificado y lista explícita | MFA obligatorio, revisión de accesos y auditoría administrativa |
 | Compromiso de Windows o Docker | Exposición de `.env`, base y backups | Sesión bloqueada, DB sin puerto y contenedor no root | Host dedicado, parches, cifrado y principio de mínimo privilegio |
 | Fallo o pérdida del disco local | Pérdida de datos desde el último respaldo externo | Backup lógico validado localmente | Backups automáticos cifrados fuera del equipo y pruebas de restauración |
 | Escrituras simultáneas | Una edición posterior puede reemplazar otra | Transacciones, constraints e idempotencia del backend | Control de versión/optimistic locking y registro de cambios |
 | Dependencia de Google o Tailscale | Login o acceso público indisponible | Salud local independiente y procedimientos de diagnóstico | Dominio propio, estrategia de contingencia y monitoreo externo |
-| Vulnerabilidades nuevas | Riesgo aun con auditoría actual limpia | CI bloquea avisos altos/críticos | Actualización programada, escaneo de imagen y revisión periódica |
+| Vulnerabilidades nuevas | Riesgo aun con auditoría actual limpia | CI bloquea avisos altos/críticos; app sin capabilities y con `no-new-privileges` | Actualización programada, escaneo de imagen y revisión periódica |
 | Datos personales en logs o respaldos | Exposición de información del salón | DB privada y backups fuera de Git | Retención, cifrado, acceso acotado y política de incidentes |
 
 Un resultado de `npm audit` con cero hallazgos no equivale a una auditoría
@@ -33,11 +33,13 @@ PostgreSQL no está publicado, el contenedor de la app no es privilegiado y
 Windows mantiene firewall y Defender activos. Por lo tanto, OAuth no es un
 bloqueante P0 del piloto.
 
-Las prioridades P1 son reducir privilegios del rol runtime de PostgreSQL,
-restringir ACL de `.env` y backups, automatizar copias cifradas externas,
-incorporar rate limiting y headers de navegador, separar salud pública de
-readiness, agregar observabilidad y escanear la imagen completa. También debe
-resolverse la dependencia de Docker Desktop respecto de la sesión Windows.
+La primera fase incorporó headers de navegador, CSP Report-Only, liveness sin
+consultas a PostgreSQL, rotación de logs y hardening básico del contenedor de la
+app. Las prioridades P1 restantes son reducir privilegios del rol runtime de
+PostgreSQL, restringir ACL de `.env` y backups, automatizar copias cifradas
+externas, incorporar rate limiting, completar observabilidad y escanear la
+imagen completa. También debe resolverse la dependencia de Docker Desktop
+respecto de la sesión Windows.
 
 Como defensa en profundidad quedan branch protection/Dependabot, pines por
 SHA/digest, seguimiento de Auth.js beta y sesiones, hardening adicional de
@@ -81,9 +83,12 @@ La inversión en dominio y alojamiento definitivo tiene sentido cuando:
 
 - Automatizar backups cifrados con retención y copia fuera del equipo.
 - Restringir ACL locales y separar roles PostgreSQL de migración y runtime.
-- Incorporar logs estructurados, rotación, IDs de solicitud, métricas y alertas.
-- Agregar rate limiting, headers de seguridad y auditoría administrativa.
-- Separar salud pública de readiness interna.
+- Incorporar logs estructurados, IDs de solicitud, métricas y alertas; la
+  rotación básica ya está aplicada.
+- Agregar rate limiting y auditoría administrativa; los headers defensivos ya
+  están aplicados y la CSP debe observarse antes de exigirla.
+- Mantener health público como liveness y readiness de DB en su healthcheck
+  interno.
 - Escanear dependencias npm e imagen completa en CI.
 - Establecer actualización mensual de dependencias e imagen base.
 
