@@ -265,7 +265,7 @@ test("management API covers CRUD, assignments, capacity, history and seed safety
 
   await t.test("rerunning the seed does not alter operational data", {
     skip: process.env.RUN_SEED_TEST !== "1"
-      ? "set RUN_SEED_TEST=1 to execute db/init.sql through Docker Compose"
+      ? "set RUN_SEED_TEST=1 to execute the compatibility demo seed through Docker Compose"
       : false
   }, async () => {
     await createStudent(ids.seedStudent, "Dato operativo");
@@ -280,7 +280,7 @@ test("management API covers CRUD, assignments, capacity, history and seed safety
       date, attendance: [{ studentId: ids.seedStudent, status: "present" }]
     }))).response.status, 200);
 
-    await execFileAsync("docker", ["compose", "exec", "-T", "db", "psql", "-U", "yoga", "-d", "yoga_salon", "-f", "/docker-entrypoint-initdb.d/001-init.sql"], { cwd: process.cwd() });
+    await execFileAsync("docker", ["compose", "exec", "-T", "db", "sh", "-c", "psql -v ON_ERROR_STOP=1 -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\" -f /opt/patryoga/db/init.sql"], { cwd: process.cwd() });
     const afterStudent = await request("/api/students");
     assert.deepEqual(afterStudent.body.students.find((item) => item.id === ids.seedStudent), {
       id: ids.seedStudent, name: "Dato operativo", phone: "+54 11 5555-0199", notes: "test"

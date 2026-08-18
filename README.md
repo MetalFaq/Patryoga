@@ -92,6 +92,11 @@ en runtime y no las incorpora a la imagen. Para el uso con Docker, la URL
 interna se arma con esos valores y el hostname `db`; no uses `localhost` en esa
 URL dentro del contenedor.
 
+Antes de iniciar la app, Compose ejecuta el servicio `migrate`. Las migraciones
+versionadas de `db/migrations/` se aplican una sola vez y quedan registradas con
+checksum en `schema_migrations`. El arranque normal no carga datos ficticios;
+`db/init.sql` queda reservado para pruebas de compatibilidad.
+
 Para generar valores locales sin inventar credenciales en el repositorio, se
 puede usar Node.js:
 
@@ -123,7 +128,8 @@ docker compose start app
 ```
 
 Para actualizar la imagen después de revisar cambios locales, crea primero un
-backup, luego ejecuta `docker compose build --pull app` y
+backup, asigna versión, commit y fecha a las variables de construcción, luego
+ejecuta `docker compose build --pull app` y
 `docker compose up -d`. No uses `docker compose down -v`: elimina el volumen y
 los datos persistentes.
 
@@ -134,8 +140,9 @@ continúa siendo 3000.
 
 La imagen usa Node.js Alpine y PostgreSQL Alpine, sin dependencias exclusivas
 de Windows; Docker Desktop puede construirla para amd64 y arm64 cuando el
-daemon/plataforma destino lo soporte. No se configura publicación remota,
-Cloudflare, DNS ni proxy.
+daemon/plataforma destino lo soporte. Las etiquetas OCI registran versión,
+commit, fecha y repositorio. El procedimiento completo está en
+[`docs/production-runbook.md`](docs/production-runbook.md).
 
 ## Callback publico futuro
 
@@ -180,7 +187,7 @@ en `docs/domain-rules.md`.
 
 ## Modelo de datos
 
-`db/init.sql` crea:
+Las migraciones de `db/migrations/` crean:
 
 - `students`: alumnas.
 - `weekly_classes`: clases fijas semanales.
@@ -189,6 +196,7 @@ en `docs/domain-rules.md`.
 - `membership_plans`: catalogo activo e historico de planes.
 - `monthly_plan_assignments`: snapshot del plan asignado por alumna y mes.
 - `monthly_plan_sessions`: clases incluidas y adicionales que originan el pool.
+- `schema_migrations`: versiones y checksums ya aplicados.
 
 ## Verificacion
 
@@ -206,12 +214,11 @@ config` no contiene `5432:` bajo `ports`, que `docker compose build` termina
 correctamente y que `docker compose up -d` deja `app` y `db` saludables. Se
 puede comprobar con `docker compose ps` y abrir `http://localhost:3000`.
 
-La auditoría de dependencias y la actualización masiva de paquetes quedan
-pendientes para una tarea separada; esta fase no modifica versiones de npm.
+La última auditoría documentada está en
+[`docs/security-audit-2026-08-17.md`](docs/security-audit-2026-08-17.md).
 
 ## Siguientes pasos
 
-1. Agregar migraciones versionadas.
-2. Definir dominio, HTTPS y secretos del entorno publico.
-3. Incorporar auditoria de cambios administrativos.
-4. Agregar pagos y tableros historicos a partir de planes y asistencias.
+1. Definir dominio, HTTPS y secretos del entorno público.
+2. Incorporar auditoría de cambios administrativos.
+3. Agregar pagos y tableros históricos a partir de planes y asistencias.

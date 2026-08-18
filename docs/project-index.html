@@ -1,0 +1,1276 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; style-src 'unsafe-inline' blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; img-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; font-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; media-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; worker-src blob:; connect-src blob: data:; frame-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Patryoga Project Map</title>
+<style>:root{color-scheme:light dark;background:light-dark(rgb(255 255 255), rgb(24 24 24))}html,body{margin:0}body{box-sizing:border-box;padding:1rem;background:inherit}iframe{display:block;width:100%;height:calc(100vh - 2rem);margin:0 auto;border:0}</style>
+</head>
+<body>
+<iframe sandbox="allow-scripts" referrerpolicy="no-referrer" title="Patryoga Project Map" srcdoc="&lt;!doctype html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+&lt;meta name=&quot;referrer&quot; content=&quot;no-referrer&quot;&gt;
+&lt;meta http-equiv=&quot;Content-Security-Policy&quot; content=&quot;default-src &#x27;none&#x27;; script-src &#x27;unsafe-inline&#x27; &#x27;unsafe-eval&#x27; &#x27;wasm-unsafe-eval&#x27; blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; style-src &#x27;unsafe-inline&#x27; blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; img-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; font-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; media-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; worker-src blob:; connect-src blob: data:; frame-src &#x27;none&#x27;; object-src &#x27;none&#x27;; base-uri &#x27;none&#x27;; form-action &#x27;none&#x27;&quot;&gt;
+&lt;title&gt;Patryoga Project Map&lt;/title&gt;
+&lt;style&gt;:root {
+  color-scheme: light dark;
+  background-color: var(
+    --background,
+    var(--color-background-primary, light-dark(rgb(255 255 255), rgb(24 24 24)))
+  ) !important;
+
+  /* Agent-facing contract; keep in sync with SKILL.md. */
+  --background: var(
+    --color-background-primary,
+    light-dark(rgb(255 255 255), rgb(24 24 24))
+  );
+  --foreground: var(
+    --color-text-primary,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --card: color-mix(in oklab, var(--foreground) 5%, transparent);
+  --card-foreground: var(
+    --color-text-primary,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --popover: var(
+    --color-background-secondary,
+    light-dark(rgb(255 255 255), rgb(45 45 45))
+  );
+  --popover-foreground: var(
+    --color-text-primary,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --primary: var(
+    --color-text-info,
+    light-dark(rgb(51 156 255), rgb(131 195 255))
+  );
+  --primary-foreground: var(
+    --color-text-inverse,
+    light-dark(rgb(255 255 255), rgb(13 13 13))
+  );
+  --secondary: var(
+    --color-background-secondary,
+    light-dark(rgb(255 255 255 / 96%), rgb(54 54 54 / 96%))
+  );
+  --secondary-foreground: var(
+    --color-text-primary,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --muted: color-mix(in srgb, var(--foreground) 10%, transparent);
+  --muted-foreground: var(
+    --color-text-secondary,
+    light-dark(rgb(26 28 31 / 49.4%), rgb(255 255 255 / 49.8%))
+  );
+  --accent: var(
+    --color-background-info,
+    light-dark(rgb(229 242 255), rgb(13 39 63))
+  );
+  --accent-foreground: var(
+    --color-text-info,
+    light-dark(rgb(51 156 255), rgb(131 195 255))
+  );
+  --destructive: var(
+    --color-text-warning,
+    light-dark(rgb(226 85 7), rgb(255 133 73))
+  );
+  --border: var(
+    --color-border-secondary,
+    light-dark(rgb(26 28 31 / 8%), rgb(255 255 255 / 8.2%))
+  );
+  --input: var(
+    --color-border-primary,
+    light-dark(
+      rgb(26 28 31 / 11.8%),
+      color-mix(in oklab, rgb(0 0 0) 10%, transparent)
+    )
+  );
+  --ring: var(
+    --color-ring-primary,
+    light-dark(rgb(51 156 255), rgb(131 195 255 / 76%))
+  );
+  --font-size-base: var(--font-text-md-size, 14px);
+  --red: light-dark(rgb(186 38 35), rgb(250 66 62));
+  --green: light-dark(rgb(0 162 64), rgb(64 201 119));
+  --viz-series-1: var(--primary);
+  --viz-series-2: light-dark(rgb(243 136 59), rgb(245 154 86));
+  --viz-series-3: light-dark(rgb(93 201 119), rgb(116 213 139));
+  --viz-series-4: light-dark(rgb(235 119 177), rgb(240 143 192));
+  --viz-series-5: light-dark(rgb(155 121 236), rgb(170 145 239));
+  --viz-series-6: light-dark(rgb(58 185 177), rgb(90 203 194));
+
+  /* Internal implementation variables; not part of the agent contract. */
+  --font-sans: -apple-system, system-ui, &quot;Segoe UI&quot;, sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, &quot;SF Mono&quot;, Menlo, Consolas, &quot;Liberation Mono&quot;,
+    monospace;
+  --font-size-normal: max(11px, var(--font-size-base));
+  --font-size-tooltip: calc(var(--font-size-base) - 1px);
+  --font-size-small: max(11px, calc(var(--font-size-base) - 2px));
+  --font-size-h1: calc(var(--font-size-normal) * 1.7142857143);
+  --font-size-h2: calc(var(--font-size-normal) * 1.4285714286);
+  --font-size-h3: calc(var(--font-size-normal) * 1.2857142857);
+  --font-weight-normal: 430;
+  --font-weight-medium: 500;
+  --line-height-normal: calc(var(--font-size-normal) * 1.5);
+  --line-height-tooltip: calc(var(--font-size-tooltip) * 1.4285714286);
+  --line-height-small: calc(var(--font-size-small) + 4px);
+  --radius: var(--border-radius-lg, 12.5px);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-2xl: calc(var(--radius) * 1.6);
+  --radius-full: 9999px;
+  --shadow-sm: 0 1px 2px -1px rgb(0 0 0 / 8%);
+  --checkmark-image: url(&quot;data:image/svg+xml,%3Csvg xmlns=&#x27;http://www.w3.org/2000/svg&#x27; viewBox=&#x27;0 0 17 17&#x27;%3E%3Cpath d=&#x27;M12.8961 3.64101C13.1297 3.41418 13.4984 3.37523 13.7779 3.56581C14.0571 3.75635 14.1554 4.11331 14.0299 4.41347L13.9615 4.53847L7.71151 13.7045C7.59411 13.8767 7.4063 13.9877 7.19881 14.0072C6.99136 14.0267 6.78564 13.9533 6.63826 13.806L2.88826 10.056L2.79842 9.9457C2.6192 9.67407 2.64927 9.30496 2.88826 9.06581C3.12738 8.82669 3.49647 8.79676 3.76815 8.97597L3.8785 9.06581L7.03084 12.2182L12.8053 3.74941L12.8961 3.64101Z&#x27;/%3E%3C/svg%3E&quot;);
+
+  /* Legacy aliases; not part of the current agent contract. */
+  --viz-bg: transparent;
+  --viz-panel: var(--card);
+  --viz-border: var(--border);
+  --viz-text: var(--foreground);
+  --viz-muted: var(--muted-foreground);
+  --viz-accent: var(--primary);
+  --viz-accent-text: var(--primary-foreground);
+  --viz-accent-bg: var(--accent);
+  --viz-font-size: var(--font-size-base);
+  --viz-warning: var(--destructive);
+}
+
+:root[data-theme=&quot;light&quot;] {
+  color-scheme: light;
+}
+
+:root[data-theme=&quot;dark&quot;] {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html &gt; body {
+  /* Preserve MCP aliases for older inline renderers without creating :root cycles. */
+  --color-background-primary: var(
+    --background,
+    light-dark(rgb(255 255 255), rgb(24 24 24))
+  );
+  --color-text-primary: var(
+    --foreground,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --color-border-secondary: var(
+    --border,
+    light-dark(rgb(26 28 31 / 8%), rgb(255 255 255 / 8.2%))
+  );
+
+  margin: 0;
+  padding: 5px;
+  color: var(--foreground);
+  background: transparent !important;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-normal);
+}
+
+a {
+  color: color-mix(in srgb, var(--viz-accent) 80%, var(--viz-text) 20%);
+  cursor: pointer;
+  font-weight: var(--font-weight-medium, 500);
+  text-decoration: none;
+  text-underline-offset: 2px;
+}
+
+a:is(:hover, :focus-visible) {
+  text-decoration-line: underline;
+  text-decoration-style: dashed;
+  text-decoration-thickness: 0.5px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin-block: 0;
+}
+
+h1 {
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+h2 {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+h3,
+h4,
+h5,
+h6 {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.3;
+}
+
+b,
+strong,
+th {
+  font-weight: var(--font-weight-medium);
+}
+
+code:not(pre code) {
+  display: inline;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  corner-shape: superellipse(1.5);
+  background: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  overflow-wrap: anywhere;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  word-break: break-word;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--foreground);
+  font: inherit;
+  text-align: start;
+}
+
+.table :is(th, td) {
+  padding-block: 10px;
+  padding-inline: 0 24px;
+  overflow-wrap: anywhere;
+  border-bottom: 1px solid var(--border);
+  text-align: start;
+  vertical-align: top;
+}
+
+.table-responsive &gt; .table :is(th, td) {
+  overflow-wrap: break-word;
+}
+
+.table :is(th, td):last-child {
+  padding-inline-end: 0;
+}
+
+.table :is(caption, thead th) {
+  font-weight: 600;
+}
+
+.table thead th {
+  padding-block: 8px;
+  border-bottom-color: color-mix(in srgb, var(--foreground) 16%, transparent);
+}
+
+.table tbody tr:last-child :is(th, td) {
+  border-bottom: 0;
+}
+
+.table.table-sm :is(th, td) {
+  padding-block: 6px;
+}
+
+.table.table-sm :is(th, td):not(:last-child) {
+  padding-inline-end: 16px;
+}
+
+.table :is(.text-end, [align=&quot;right&quot;]) {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.table :is(.text-center, [align=&quot;center&quot;]) {
+  text-align: center;
+}
+
+.table .text-nowrap {
+  white-space: nowrap;
+}
+
+#widget {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  background: transparent !important;
+}
+
+.card {
+  min-width: 0;
+  padding: 12px;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  border-radius: var(--radius-2xl);
+  corner-shape: superellipse(1.5);
+  color: var(--card-foreground);
+  background: var(--card);
+}
+
+#widget &gt; :not(.card) {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 50;
+  top: 0;
+  left: 0;
+  width: max-content;
+  max-width: min(
+    20rem,
+    var(--tooltip-available-width, calc(100vw - 10px)),
+    calc(100vw - 10px)
+  );
+  max-height: min(
+    var(--tooltip-available-height, calc(100vh - 10px)),
+    calc(100vh - 10px)
+  );
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--popover-foreground);
+  background: var(--popover);
+  box-shadow: none;
+  font-size: var(--font-size-tooltip);
+  line-height: var(--line-height-tooltip);
+  overflow-wrap: break-word;
+  white-space: normal;
+  pointer-events: none;
+  user-select: none;
+}
+
+.viz-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(max(180px, 24%), 1fr));
+  gap: 10px;
+}
+
+.viz-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.viz-stat-value {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+.viz-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.viz-badge {
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  color: var(--accent-foreground);
+  background: var(--accent);
+  font-weight: var(--font-weight-medium);
+}
+
+small,
+.text-small,
+.viz-badge {
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-small);
+}
+
+.text-muted {
+  color: var(--muted-foreground);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.viz-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.viz-controls &gt; .form-label {
+  display: grid;
+  min-width: min(100%, 260px);
+  flex: 1 1 280px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 2px 12px;
+  margin-bottom: 0;
+}
+
+.viz-controls &gt; .form-label &gt; :is(.form-control, .form-range, .form-select) {
+  grid-column: 1 / -1;
+}
+
+.btn,
+.form-check-input,
+.form-control,
+.form-range,
+.form-select {
+  font: inherit;
+}
+
+.btn {
+  appearance: button;
+  display: inline-flex;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0 8px;
+  -webkit-app-region: no-drag;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--secondary-foreground);
+  background: var(--secondary);
+  cursor: var(--cursor-interaction, pointer);
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+.btn:is(.btn-block, .viz-tile) {
+  inline-size: 100%;
+}
+
+.btn.viz-tile {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+a.btn {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn:not(:disabled):hover {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.btn-primary {
+  border-color: transparent;
+  color: var(--primary-foreground);
+  background: var(--foreground);
+  background-clip: padding-box;
+}
+
+.btn-primary .text-muted {
+  color: color-mix(in srgb, var(--primary-foreground) 50%, transparent);
+}
+
+.btn-primary:not(:disabled):hover {
+  background: color-mix(in srgb, var(--foreground) 80%, transparent);
+  background-clip: padding-box;
+}
+
+.btn-ghost {
+  border-color: transparent;
+  color: var(--muted-foreground);
+  background: transparent;
+}
+
+.btn-ghost:not(:disabled):hover {
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+[data-lucide] {
+  stroke-width: 1.6;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--foreground);
+}
+
+.form-control {
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  padding: 0 8px;
+  outline: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--foreground);
+  background: var(--secondary);
+}
+
+.form-control::placeholder {
+  color: var(--muted-foreground);
+}
+
+.form-control[type=&quot;file&quot;] {
+  padding: 0;
+  overflow: hidden;
+  cursor: var(--cursor-interaction, pointer);
+}
+
+.form-control[type=&quot;file&quot;]::file-selector-button {
+  min-height: 26px;
+  margin-right: 8px;
+  padding: 0 8px;
+  border: 0;
+  border-right: 1px solid var(--input);
+  color: var(--secondary-foreground);
+  background: var(--secondary);
+  cursor: inherit;
+  font: inherit;
+}
+
+.form-control[type=&quot;file&quot;]:not(:disabled):hover::file-selector-button {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.form-control-color[type=&quot;color&quot;] {
+  width: 40px;
+  height: 28px;
+  padding: 3px;
+  cursor: var(--cursor-interaction, pointer);
+}
+
+.form-control-color[type=&quot;color&quot;]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.form-control-color[type=&quot;color&quot;]::-webkit-color-swatch {
+  border: 0;
+  border-radius: calc(var(--radius-lg) - 4px);
+  corner-shape: superellipse(1.5);
+}
+
+textarea.form-control {
+  height: auto;
+  min-height: 72px;
+  padding: 8px 10px;
+  resize: vertical;
+}
+
+.form-control:focus-visible {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-control:disabled,
+.form-select:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.form-select {
+  appearance: none;
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  margin: 0;
+  padding: 0 32px 0 8px;
+  outline: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--foreground);
+  background-color: var(--secondary);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted-foreground) 50%),
+    linear-gradient(135deg, var(--muted-foreground) 50%, transparent 50%);
+  background-position:
+    calc(100% - 14px) 50%,
+    calc(100% - 10px) 50%;
+  background-repeat: no-repeat;
+  background-size: 4px 4px;
+  cursor: var(--cursor-interaction, default);
+}
+
+.form-select:not(:disabled):hover {
+  background-color: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.form-select:focus-visible {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-check {
+  display: flex;
+  min-height: 20px;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-check-input {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  margin: 0;
+  border: 1px solid var(--input);
+  color: var(--primary-foreground);
+  background-color: transparent;
+  cursor: var(--cursor-interaction, default);
+  transition:
+    background-color 150ms,
+    border-color 150ms,
+    box-shadow 150ms;
+}
+
+.form-check:not(.form-switch) .form-check-input[type=&quot;checkbox&quot;] {
+  border-color: var(--input);
+  border-radius: var(--radius-sm);
+  corner-shape: superellipse(1.5);
+  background-color: var(--secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.form-check:not(.form-switch)
+  .form-check-input:not(:disabled):not(:checked):hover {
+  background-color: var(--card);
+}
+
+.form-check:not(.form-switch) .form-check-input[type=&quot;checkbox&quot;]:checked {
+  border-color: var(--primary);
+  background-color: var(--primary);
+}
+
+.form-check:not(.form-switch)
+  .form-check-input[type=&quot;checkbox&quot;]:checked::before {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--primary-foreground);
+  content: &quot;&quot;;
+  mask: var(--checkmark-image) center / 12px 12px no-repeat;
+}
+
+.form-check-input[type=&quot;radio&quot;] {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-full);
+}
+
+.form-check-input[type=&quot;radio&quot;]:checked {
+  border: 2px solid var(--primary);
+  background:
+    radial-gradient(circle, var(--primary-foreground) 0 2.5px, transparent 3px),
+    var(--primary);
+}
+
+.form-check:not(.form-switch) .form-check-input:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.form-check:not(.form-switch) .form-check-input:disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.form-check:not(.form-switch) .form-check-input:disabled + .form-check-label {
+  cursor: not-allowed;
+}
+
+.form-switch .form-check-input:disabled,
+.form-switch .form-check-input:disabled + .form-check-label {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.form-check-label {
+  color: var(--foreground);
+  cursor: var(--cursor-interaction, default);
+}
+
+.form-switch .form-check-input {
+  position: relative;
+  width: 32px;
+  height: 20px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--muted);
+  box-shadow: none;
+  transition: background-color 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border: 1px solid light-dark(var(--primary-foreground), var(--foreground));
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+  box-shadow: var(--shadow-sm);
+  content: &quot;&quot;;
+  transform: translate(2px, -50%);
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input:checked {
+  background: var(--primary);
+}
+
+.form-switch .form-check-input:checked::before {
+  transform: translate(14px, -50%);
+}
+
+.form-switch .form-check-input:focus-visible {
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.form-range {
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 28px;
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  outline: none;
+  border: 0;
+  accent-color: var(--primary);
+  background: linear-gradient(
+      color-mix(in srgb, var(--foreground) 7%, transparent),
+      color-mix(in srgb, var(--foreground) 7%, transparent)
+    )
+    center / 100% 2px no-repeat;
+}
+
+.form-range::-webkit-slider-runnable-track {
+  height: 28px;
+  background: transparent;
+}
+
+.form-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+}
+
+.form-range:focus-visible::-webkit-slider-thumb {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-range::-moz-range-track {
+  height: 28px;
+  background: transparent;
+}
+
+.form-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+}
+
+.form-range:focus-visible::-moz-range-thumb {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-range:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.btn:not(.btn-primary, .viz-tile):is(
+    [aria-pressed=&quot;true&quot;],
+    [aria-selected=&quot;true&quot;],
+    .is-selected
+  ) {
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+  background: var(--primary);
+}
+
+.btn.viz-tile:is([aria-pressed=&quot;true&quot;], [aria-selected=&quot;true&quot;], .is-selected) {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+#widget &gt; svg {
+  width: 100%;
+}
+
+.text-warning,
+.text-destructive {
+  color: var(--destructive);
+}
+
+html&gt;body{padding:0}&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;style&gt;
+  #patryoga-project-map { color: #142033; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif; max-width: 1100px; margin: 0 auto; padding: 28px; background: linear-gradient(140deg, #f5f9fb 0%, #ffffff 55%, #f9f5fb 100%); }
+  #patryoga-project-map * { box-sizing: border-box; }
+  .pym-header { display: flex; align-items: end; justify-content: space-between; gap: 18px; margin-bottom: 22px; }
+  .pym-eyebrow { color: #7b3f8c; font-size: 12px; font-weight: 700; letter-spacing: .12em; margin: 0 0 6px; text-transform: uppercase; }
+  .pym-header h1 { font-size: clamp(25px, 4vw, 38px); letter-spacing: -.04em; line-height: 1.05; margin: 0; }
+  .pym-header p { color: #5e6a7c; line-height: 1.5; margin: 8px 0 0; max-width: 620px; }
+  .pym-count { background: #273b60; border-radius: 999px; color: #fff; font-size: 13px; font-weight: 700; padding: 9px 13px; white-space: nowrap; }
+  .pym-shell { display: grid; gap: 20px; grid-template-columns: minmax(190px, .72fr) minmax(0, 2fr); }
+  .pym-nav { background: #fff; border: 1px solid #dde5ed; border-radius: 18px; padding: 12px; }
+  .pym-nav-label { color: #738196; display: block; font-size: 11px; font-weight: 700; letter-spacing: .1em; margin: 7px 8px 10px; text-transform: uppercase; }
+  .pym-group { align-items: center; background: transparent; border: 0; border-radius: 11px; color: #33445b; cursor: pointer; display: flex; font: inherit; font-weight: 650; gap: 10px; margin: 2px 0; padding: 11px 10px; text-align: left; width: 100%; }
+  .pym-group:hover, .pym-group[aria-pressed=&quot;true&quot;] { background: #ede6f5; color: #5e2776; }
+  .pym-group[aria-pressed=&quot;true&quot;] { box-shadow: inset 3px 0 0 #7b3f8c; }
+  .pym-icon { align-items: center; background: #eaf0f5; border-radius: 8px; display: inline-flex; font-size: 14px; height: 28px; justify-content: center; width: 28px; }
+  .pym-group[aria-pressed=&quot;true&quot;] .pym-icon { background: #d9c6e7; }
+  .pym-main { min-width: 0; }
+  .pym-context { align-items: baseline; display: flex; gap: 10px; justify-content: space-between; margin: 2px 2px 12px; }
+  .pym-context h2 { font-size: 18px; letter-spacing: -.02em; margin: 0; }
+  .pym-context span { color: #738196; font-size: 13px; }
+  .pym-grid { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pym-file { background: #fff; border: 1px solid #dde5ed; border-radius: 14px; color: #1f3048; cursor: pointer; min-height: 92px; padding: 15px; text-align: left; transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
+  .pym-file:hover, .pym-file.is-selected { border-color: #9b6eb0; box-shadow: 0 8px 20px rgba(78, 51, 108, .10); transform: translateY(-1px); }
+  .pym-file.is-selected { background: #faf7fc; }
+  .pym-file code { color: #5e2776; display: block; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; overflow-wrap: anywhere; }
+  .pym-file strong { display: block; font-size: 14px; margin-top: 7px; }
+  .pym-detail { background: #273b60; border-radius: 16px; color: #fff; margin-top: 16px; padding: 20px; }
+  .pym-detail .pym-detail-label { color: #b9c9e3; display: block; font-size: 11px; font-weight: 700; letter-spacing: .1em; margin-bottom: 6px; text-transform: uppercase; }
+  .pym-detail h3 { font-size: 21px; margin: 0 0 4px; }
+  .pym-detail code { color: #ead2f5; font-size: 12px; }
+  .pym-detail p { color: #e2eaf6; line-height: 1.55; margin: 10px 0 0; }
+  .pym-detail .pym-relation { color: #b9c9e3; font-size: 13px; }
+  @media (max-width: 700px) { #patryoga-project-map { padding: 18px; } .pym-header { align-items: start; flex-direction: column; } .pym-shell { grid-template-columns: 1fr; } .pym-nav { display: flex; flex-wrap: wrap; gap: 5px; } .pym-nav-label { flex-basis: 100%; } .pym-group { flex: 1 1 145px; margin: 0; } .pym-grid { grid-template-columns: 1fr; } }
+&lt;/style&gt;
+&lt;main id=&quot;patryoga-project-map&quot;&gt;
+  &lt;header class=&quot;pym-header&quot;&gt;
+    &lt;div&gt;
+      &lt;p class=&quot;pym-eyebrow&quot;&gt;Patryoga · mapa técnico&lt;/p&gt;
+      &lt;h1&gt;Índice del proyecto&lt;/h1&gt;
+      &lt;p&gt;Elegí un área, después un archivo. El panel inferior explica su rol y cómo encaja en la aplicación.&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;span class=&quot;pym-count&quot; id=&quot;pym-count&quot;&gt;&lt;/span&gt;
+  &lt;/header&gt;
+  &lt;div class=&quot;pym-shell&quot;&gt;
+    &lt;nav class=&quot;pym-nav&quot; aria-label=&quot;Áreas del proyecto&quot;&gt;
+      &lt;span class=&quot;pym-nav-label&quot;&gt;Áreas&lt;/span&gt;
+      &lt;button class=&quot;pym-group&quot; type=&quot;button&quot; data-group=&quot;all&quot; aria-pressed=&quot;true&quot;&gt;&lt;span class=&quot;pym-icon&quot;&gt;⌘&lt;/span&gt;Todo&lt;/button&gt;
+      &lt;button class=&quot;pym-group&quot; type=&quot;button&quot; data-group=&quot;app&quot; aria-pressed=&quot;false&quot;&gt;&lt;span class=&quot;pym-icon&quot;&gt;◫&lt;/span&gt;Aplicación&lt;/button&gt;
+      &lt;button class=&quot;pym-group&quot; type=&quot;button&quot; data-group=&quot;api&quot; aria-pressed=&quot;false&quot;&gt;&lt;span class=&quot;pym-icon&quot;&gt;⇄&lt;/span&gt;API y datos&lt;/button&gt;
+      &lt;button class=&quot;pym-group&quot; type=&quot;button&quot; data-group=&quot;ops&quot; aria-pressed=&quot;false&quot;&gt;&lt;span class=&quot;pym-icon&quot;&gt;◉&lt;/span&gt;Operación&lt;/button&gt;
+      &lt;button class=&quot;pym-group&quot; type=&quot;button&quot; data-group=&quot;docs&quot; aria-pressed=&quot;false&quot;&gt;&lt;span class=&quot;pym-icon&quot;&gt;≡&lt;/span&gt;Documentación&lt;/button&gt;
+      &lt;button class=&quot;pym-group&quot; type=&quot;button&quot; data-group=&quot;tests&quot; aria-pressed=&quot;false&quot;&gt;&lt;span class=&quot;pym-icon&quot;&gt;✓&lt;/span&gt;Pruebas&lt;/button&gt;
+    &lt;/nav&gt;
+    &lt;section class=&quot;pym-main&quot; aria-live=&quot;polite&quot;&gt;
+      &lt;div class=&quot;pym-context&quot;&gt;&lt;h2 id=&quot;pym-title&quot;&gt;Todo el proyecto&lt;/h2&gt;&lt;span id=&quot;pym-subtitle&quot;&gt;&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;pym-grid&quot; id=&quot;pym-grid&quot;&gt;&lt;/div&gt;
+      &lt;article class=&quot;pym-detail&quot; id=&quot;pym-detail&quot;&gt;&lt;span class=&quot;pym-detail-label&quot;&gt;Cómo leer el mapa&lt;/span&gt;&lt;h3&gt;Seleccioná un archivo&lt;/h3&gt;&lt;p&gt;Vas a ver su responsabilidad principal y los módulos con los que se conecta.&lt;/p&gt;&lt;/article&gt;
+    &lt;/section&gt;
+  &lt;/div&gt;
+&lt;/main&gt;
+&lt;script&gt;
+(() =&gt; {
+  const root = document.getElementById(&#x27;patryoga-project-map&#x27;);
+  const grid = document.getElementById(&#x27;pym-grid&#x27;);
+  const detail = document.getElementById(&#x27;pym-detail&#x27;);
+  const title = document.getElementById(&#x27;pym-title&#x27;);
+  const subtitle = document.getElementById(&#x27;pym-subtitle&#x27;);
+  const count = document.getElementById(&#x27;pym-count&#x27;);
+  const groups = { all: &#x27;Todo el proyecto&#x27;, app: &#x27;Aplicación e identidad&#x27;, api: &#x27;API, reglas y datos&#x27;, ops: &#x27;Operación local&#x27;, docs: &#x27;Documentación&#x27;, tests: &#x27;Pruebas&#x27; };
+  const items = [
+    [&#x27;app&#x27;,&#x27;src/app/page.tsx&#x27;,&#x27;Pantalla principal&#x27;,&#x27;Agenda, asistencia, Alumnas/os, clases y planes.&#x27;,&#x27;API de clases, estudiantes, asistencia, planes y estilos globales.&#x27;],
+    [&#x27;app&#x27;,&#x27;src/app/globals.css&#x27;,&#x27;Estilos globales&#x27;,&#x27;Diseño responsive de la interfaz móvil.&#x27;,&#x27;page.tsx y layout.tsx.&#x27;],
+    [&#x27;app&#x27;,&#x27;src/app/layout.tsx&#x27;,&#x27;Marco de Next.js&#x27;,&#x27;Envuelve páginas y carga estilos.&#x27;,&#x27;globals.css y las páginas de app.&#x27;],
+    [&#x27;app&#x27;,&#x27;src/app/login/page.tsx&#x27;,&#x27;Inicio de sesión&#x27;,&#x27;Pantalla de acceso con Google y errores de configuración.&#x27;,&#x27;auth.ts y proxy.ts.&#x27;],
+    [&#x27;app&#x27;,&#x27;src/components/plan-management.tsx&#x27;,&#x27;Catálogo de planes&#x27;,&#x27;Alta, edición y activación de planes mensuales.&#x27;,&#x27;API de planes y pantalla principal.&#x27;],
+    [&#x27;app&#x27;,&#x27;src/components/student-plan-section.tsx&#x27;,&#x27;Plan por alumna/o&#x27;,&#x27;Asignación completa o proporcional y seguimiento del pool.&#x27;,&#x27;API de asignaciones y ficha de estudiante.&#x27;],
+    [&#x27;app&#x27;,&#x27;src/components/sign-out-button.tsx&#x27;,&#x27;Cerrar sesión&#x27;,&#x27;Acción reutilizable para salir de la cuenta.&#x27;,&#x27;page.tsx y Auth.js.&#x27;],
+    [&#x27;app&#x27;,&#x27;src/auth.ts&#x27;,&#x27;Auth.js&#x27;,&#x27;Google, sesión y autorización por correo.&#x27;,&#x27;auth-environment.ts, proxy.ts y ruta OAuth.&#x27;],
+    [&#x27;app&#x27;,&#x27;src/auth-environment.ts&#x27;,&#x27;Entorno de autenticación&#x27;,&#x27;Valida variables antes de habilitar Google.&#x27;,&#x27;auth.ts y .env.&#x27;],
+    [&#x27;app&#x27;,&#x27;src/proxy.ts&#x27;,&#x27;Protección de rutas&#x27;,&#x27;Integra Auth.js con el proxy de Next.js 16.&#x27;,&#x27;auth.ts, login y rutas API.&#x27;],
+    [&#x27;api&#x27;,&#x27;src/app/api/auth/[...nextauth]/route.ts&#x27;,&#x27;Ruta OAuth&#x27;,&#x27;Handlers de Auth.js para iniciar y terminar el acceso.&#x27;,&#x27;auth.ts y Google.&#x27;],
+    [&#x27;api&#x27;,&#x27;src/app/api/classes/route.ts&#x27;,&#x27;Clases semanales&#x27;,&#x27;Lista sesiones y crea clases.&#x27;,&#x27;yoga-repository.ts y page.tsx.&#x27;],
+    [&#x27;api&#x27;,&#x27;src/app/api/classes/[classId]/route.ts&#x27;,&#x27;Editar o eliminar clase&#x27;,&#x27;Actualiza una clase o la retira sin perder historia.&#x27;,&#x27;yoga-repository.ts, clases y asistencia.&#x27;],
+    [&#x27;api&#x27;,&#x27;src/app/api/classes/[classId]/attendance/route.ts&#x27;,&#x27;Asistencia&#x27;,&#x27;Lee y guarda presentes y ausentes.&#x27;,&#x27;yoga-repository.ts, planes y agenda.&#x27;],
+    [&#x27;api&#x27;,&#x27;src/app/api/students/route.ts&#x27;,&#x27;Alumnas/os&#x27;,&#x27;Lista activas/os o archivadas/os y da de alta.&#x27;,&#x27;yoga-repository.ts y ficha de estudiante.&#x27;],
+    [&#x27;api&#x27;,&#x27;src/app/api/students/[studentId]/route.ts&#x27;,&#x27;Ficha de alumna/o&#x27;,&#x27;Edita, archiva o reingresa una persona.&#x27;,&#x27;yoga-repository.ts y page.tsx.&#x27;],
+    [&#x27;api&#x27;,&#x27;src/app/api/students/[studentId]/classes/route.ts&#x27;,&#x27;Horarios asignados&#x27;,&#x27;Asigna o quita clases habituales con historia.&#x27;,&#x27;yoga-repository.ts y ficha de estudiante.&#x27;],
+    [&#x27;api&#x27;,&#x27;src/app/api/health/route.ts&#x27;,&#x27;Salud&#x27;,&#x27;Consulta PostgreSQL y entrega el estado seguro de la app.&#x27;,&#x27;docker-compose.yml y db.ts.&#x27;],
+    [&#x27;api&#x27;,&#x27;src/app/api/plans · src/app/api/plan-assignments&#x27;,&#x27;Planes mensuales&#x27;,&#x27;Catálogo, asignación, snapshots y progreso mensual.&#x27;,&#x27;plans-repository.ts y componentes de planes.&#x27;],
+    [&#x27;api&#x27;,&#x27;src/server/yoga-repository.ts&#x27;,&#x27;Núcleo de negocio&#x27;,&#x27;Solapamientos, cupos, vigencias, personas, clases y asistencia.&#x27;,&#x27;Todas las rutas de negocio y PostgreSQL.&#x27;],
+    [&#x27;api&#x27;,&#x27;src/server/plans-repository.ts&#x27;,&#x27;Dominio de planes&#x27;,&#x27;Pools completos/proporcionales, snapshots y consumo.&#x27;,&#x27;API de planes, asistencia y PostgreSQL.&#x27;],
+    [&#x27;api&#x27;,&#x27;src/server/dates.ts&#x27;,&#x27;Fechas de sesiones&#x27;,&#x27;Convierte días semanales en fechas operativas.&#x27;,&#x27;yoga-repository.ts.&#x27;],
+    [&#x27;api&#x27;,&#x27;src/lib/db.ts&#x27;,&#x27;Conexión PostgreSQL&#x27;,&#x27;Crea y reutiliza el pool de conexiones.&#x27;,&#x27;DATABASE_URL y yoga-repository.ts.&#x27;],
+    [&#x27;api&#x27;,&#x27;src/lib/types.ts&#x27;,&#x27;Tipos compartidos&#x27;,&#x27;Formas de datos usadas por interfaz y API.&#x27;,&#x27;page.tsx, rutas y repositorio.&#x27;],
+    [&#x27;api&#x27;,&#x27;src/lib/mock-data.ts&#x27;,&#x27;Datos de apoyo&#x27;,&#x27;Etiquetas y apoyo local de interfaz.&#x27;,&#x27;page.tsx.&#x27;],
+    [&#x27;ops&#x27;,&#x27;db/migrations · db/migrate.sh&#x27;,&#x27;Migraciones versionadas&#x27;,&#x27;Aplica SQL una vez y registra versión y checksum.&#x27;,&#x27;PostgreSQL, Compose y schema_migrations.&#x27;],
+    [&#x27;ops&#x27;,&#x27;db/init.sql · db/seeds/demo.sql&#x27;,&#x27;Datos de demostración&#x27;,&#x27;Compatibilidad para pruebas; no se carga en producción.&#x27;,&#x27;Migraciones y suites de API.&#x27;],
+    [&#x27;ops&#x27;,&#x27;db/maintenance/reset_operational_data.sql&#x27;,&#x27;Limpieza inicial&#x27;,&#x27;Borra datos operativos sólo con confirmación explícita.&#x27;,&#x27;Backup, planes predeterminados y runbook.&#x27;],
+    [&#x27;ops&#x27;,&#x27;docker-compose.yml&#x27;,&#x27;Pila local&#x27;,&#x27;App, migración, base, salud, volumen persistente y secretos.&#x27;,&#x27;Dockerfile, .env y /api/health.&#x27;],
+    [&#x27;ops&#x27;,&#x27;Dockerfile&#x27;,&#x27;Imagen de la app&#x27;,&#x27;Construye Next.js y ejecuta como usuario no privilegiado.&#x27;,&#x27;docker-compose.yml y package.json.&#x27;],
+    [&#x27;ops&#x27;,&#x27;.env.example&#x27;,&#x27;Plantilla de secretos&#x27;,&#x27;Variables requeridas para Docker y Google.&#x27;,&#x27;docker-compose.yml, auth-environment.ts y db.ts.&#x27;],
+    [&#x27;ops&#x27;,&#x27;package.json&#x27;,&#x27;Comandos y dependencias&#x27;,&#x27;Next.js, Auth.js, PostgreSQL y verificaciones.&#x27;,&#x27;Dockerfile, pruebas y configuración.&#x27;],
+    [&#x27;ops&#x27;,&#x27;next.config.ts · tailwind.config.ts · postcss.config.mjs · eslint.config.mjs · tsconfig.json&#x27;,&#x27;Herramientas&#x27;,&#x27;Ajustes de compilación, estilos, lint y tipos.&#x27;,&#x27;Todo el proyecto.&#x27;],
+    [&#x27;ops&#x27;,&#x27;.github/workflows/ci.yml&#x27;,&#x27;Integración continua&#x27;,&#x27;Audita, tipa, revisa y construye cada cambio remoto.&#x27;,&#x27;GitHub y package.json.&#x27;],
+    [&#x27;docs&#x27;,&#x27;README.md&#x27;,&#x27;Guía técnica&#x27;,&#x27;Arranque, OAuth, Docker, backups y límites actuales.&#x27;,&#x27;Configuración y operación local.&#x27;],
+    [&#x27;docs&#x27;,&#x27;AGENTS.md&#x27;,&#x27;Reglas de colaboración&#x27;,&#x27;Responsabilidades de archivos y validaciones.&#x27;,&#x27;Todos los cambios de agentes.&#x27;],
+    [&#x27;docs&#x27;,&#x27;docs/api-contract.md&#x27;,&#x27;Contrato de API&#x27;,&#x27;Entradas, respuestas y errores de cada endpoint.&#x27;,&#x27;Frontend, backend y pruebas.&#x27;],
+    [&#x27;docs&#x27;,&#x27;docs/domain-rules.md&#x27;,&#x27;Reglas del salón&#x27;,&#x27;Agenda, historia, eliminaciones, asignaciones y asistencia.&#x27;,&#x27;Repositorio, API y producto.&#x27;],
+    [&#x27;docs&#x27;,&#x27;docs/flujo-diario-administradora.md&#x27;,&#x27;Flujo diario&#x27;,&#x27;Uso de agenda y asistencia para Patricia.&#x27;,&#x27;Interfaz y criterios de aceptación.&#x27;],
+    [&#x27;docs&#x27;,&#x27;docs/criterios-aceptacion-proxima-version.md&#x27;,&#x27;Criterios de aceptación&#x27;,&#x27;Define cuándo una mejora está lista.&#x27;,&#x27;Producto, QA e integración.&#x27;],
+    [&#x27;docs&#x27;,&#x27;docs/backlog-por-fases.md&#x27;,&#x27;Backlog por fases&#x27;,&#x27;Evoluciones futuras priorizadas.&#x27;,&#x27;Asesor de producto.&#x27;],
+    [&#x27;docs&#x27;,&#x27;docs/decisiones-producto-pendientes.md&#x27;,&#x27;Decisiones abiertas&#x27;,&#x27;Temas a definir antes de ampliar alcance.&#x27;,&#x27;Producto y coordinación.&#x27;],
+    [&#x27;docs&#x27;,&#x27;docs/planes-mensuales.md&#x27;,&#x27;Planes mensuales&#x27;,&#x27;Reglas operativas de pools, proporcionales y snapshots.&#x27;,&#x27;API, frontend y pruebas de planes.&#x27;],
+    [&#x27;docs&#x27;,&#x27;docs/production-runbook.md&#x27;,&#x27;Publicación y recuperación&#x27;,&#x27;Compuertas, imagen, túnel, limpieza y rollback.&#x27;,&#x27;Docker, PostgreSQL, Cloudflare y OAuth.&#x27;],
+    [&#x27;docs&#x27;,&#x27;docs/security-audit-2026-08-17.md&#x27;,&#x27;Auditoría de seguridad&#x27;,&#x27;Hallazgos npm, resolución y control continuo.&#x27;,&#x27;Dependencias y CI.&#x27;],
+    [&#x27;tests&#x27;,&#x27;tests/api-contract.test.mjs&#x27;,&#x27;Contrato de asistencia&#x27;,&#x27;Fechas pasadas, idempotencia, errores y persistencia.&#x27;,&#x27;API de asistencia y Docker.&#x27;],
+    [&#x27;tests&#x27;,&#x27;tests/management-api.test.mjs&#x27;,&#x27;Reglas de gestión&#x27;,&#x27;Solapamientos, cupos, reingresos, eliminaciones e historia.&#x27;,&#x27;Clases, alumnas/os y base.&#x27;],
+    [&#x27;tests&#x27;,&#x27;tests/auth-access.test.mjs&#x27;,&#x27;Acceso&#x27;,&#x27;Autorizada/o, anónimo y configuración incompleta.&#x27;,&#x27;Auth.js y middleware.&#x27;],
+    [&#x27;tests&#x27;,&#x27;tests/auth-cookie.mjs&#x27;,&#x27;Ayuda de autenticación&#x27;,&#x27;Sesión temporal para pruebas de API.&#x27;,&#x27;Suites protegidas.&#x27;],
+    [&#x27;tests&#x27;,&#x27;tests/monthly-plans-api.test.mjs&#x27;,&#x27;Contrato de planes&#x27;,&#x27;Pools, proporcionalidad, snapshots, consumo e historia.&#x27;,&#x27;API de planes, asistencia y PostgreSQL.&#x27;],
+    [&#x27;tests&#x27;,&#x27;tests/README.md&#x27;,&#x27;Guía de pruebas&#x27;,&#x27;Cómo ejecutar las suites y sus opciones.&#x27;,&#x27;Todas las pruebas.&#x27;]
+  ];
+  let active = &#x27;all&#x27;;
+  let selected = &#x27;&#x27;;
+  function showDetail(item) {
+    selected = item[1];
+    detail.innerHTML = `&lt;span class=&quot;pym-detail-label&quot;&gt;${groups[item[0]]}&lt;/span&gt;&lt;h3&gt;${item[2]}&lt;/h3&gt;&lt;code&gt;${item[1]}&lt;/code&gt;&lt;p&gt;${item[3]}&lt;/p&gt;&lt;p class=&quot;pym-relation&quot;&gt;&lt;strong&gt;Se relaciona con:&lt;/strong&gt; ${item[4]}&lt;/p&gt;`;
+    render();
+  }
+  function render() {
+    const visible = items.filter(item =&gt; active === &#x27;all&#x27; || item[0] === active);
+    title.textContent = groups[active];
+    subtitle.textContent = `${visible.length} elemento${visible.length === 1 ? &#x27;&#x27; : &#x27;s&#x27;}`;
+    count.textContent = `${items.length} elementos mapeados`;
+    grid.innerHTML = &#x27;&#x27;;
+    visible.forEach(item =&gt; {
+      const button = document.createElement(&#x27;button&#x27;);
+      button.type = &#x27;button&#x27;;
+      button.className = `pym-file${selected === item[1] ? &#x27; is-selected&#x27; : &#x27;&#x27;}`;
+      button.innerHTML = `&lt;code&gt;${item[1]}&lt;/code&gt;&lt;strong&gt;${item[2]}&lt;/strong&gt;`;
+      button.setAttribute(&#x27;aria-label&#x27;, `${item[1]}: ${item[2]}`);
+      button.addEventListener(&#x27;click&#x27;, () =&gt; showDetail(item));
+      grid.appendChild(button);
+    });
+  }
+  root.querySelectorAll(&#x27;[data-group]&#x27;).forEach(button =&gt; button.addEventListener(&#x27;click&#x27;, () =&gt; {
+    active = button.dataset.group;
+    root.querySelectorAll(&#x27;[data-group]&#x27;).forEach(node =&gt; node.setAttribute(&#x27;aria-pressed&#x27;, String(node === button)));
+    selected = &#x27;&#x27;;
+    detail.innerHTML = &#x27;&lt;span class=&quot;pym-detail-label&quot;&gt;Cómo leer el mapa&lt;/span&gt;&lt;h3&gt;Seleccioná un archivo&lt;/h3&gt;&lt;p&gt;Vas a ver su responsabilidad principal y los módulos con los que se conecta.&lt;/p&gt;&#x27;;
+    render();
+  }));
+  render();
+})();
+&lt;/script&gt;
+
+&lt;script src=&quot;https://unpkg.com/@floating-ui/core@1.7.3/dist/floating-ui.core.umd.min.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;https://unpkg.com/@floating-ui/dom@1.7.4/dist/floating-ui.dom.umd.min.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+(() =&gt; {
+  if (window.FloatingUIDOM == null) {
+    return;
+  }
+  const { autoUpdate, computePosition, flip, offset, shift, size } =
+    window.FloatingUIDOM;
+  const tooltipPlacements = new Set([&quot;top&quot;, &quot;right&quot;, &quot;bottom&quot;, &quot;left&quot;]);
+  const tooltipId = `codex-visualization-tooltip-${
+    window.crypto?.randomUUID?.() ?? Date.now().toString(36)
+  }`;
+  const tooltipGap = 5;
+  const hoverDelay = 700;
+  const skipDelay = 300;
+  let activeTrigger = null;
+  let pendingTrigger = null;
+  let tooltip = null;
+  let openTimeout = null;
+  let autoUpdateCleanup = null;
+  let positionRequest = 0;
+  let skipDelayUntil = 0;
+
+  const getTrigger = (target) =&gt;
+    target?.nodeType === Node.ELEMENT_NODE
+      ? target.closest(&quot;[data-tooltip]&quot;)
+      : null;
+  const containsTarget = (trigger, target) =&gt;
+    target?.nodeType != null &amp;&amp; trigger.contains(target);
+  const getContent = (trigger) =&gt;
+    trigger.getAttribute(&quot;data-tooltip&quot;)?.trim() ?? &quot;&quot;;
+  const getPlacement = (trigger) =&gt; {
+    const placement = trigger.getAttribute(&quot;data-tooltip-placement&quot;);
+    return tooltipPlacements.has(placement) ? placement : &quot;top&quot;;
+  };
+  const getTooltip = () =&gt; {
+    if (tooltip == null) {
+      tooltip = document.createElement(&quot;div&quot;);
+      tooltip.id = tooltipId;
+      tooltip.className = &quot;tooltip&quot;;
+      tooltip.setAttribute(&quot;role&quot;, &quot;tooltip&quot;);
+    }
+    return tooltip;
+  };
+  const setDescribedBy = (trigger, described) =&gt; {
+    const ids = new Set(
+      (trigger.getAttribute(&quot;aria-describedby&quot;) ?? &quot;&quot;)
+        .split(/\s+/)
+        .filter(Boolean),
+    );
+    if (described) {
+      ids.add(tooltipId);
+    } else {
+      ids.delete(tooltipId);
+    }
+    if (ids.size === 0) {
+      trigger.removeAttribute(&quot;aria-describedby&quot;);
+    } else {
+      trigger.setAttribute(&quot;aria-describedby&quot;, [...ids].join(&quot; &quot;));
+    }
+  };
+  const clearOpenTimeout = () =&gt; {
+    if (openTimeout != null) {
+      window.clearTimeout(openTimeout);
+      openTimeout = null;
+    }
+    pendingTrigger = null;
+  };
+  const closeTooltip = (activateSkipDelay = true) =&gt; {
+    clearOpenTimeout();
+    positionRequest += 1;
+    autoUpdateCleanup?.();
+    autoUpdateCleanup = null;
+    if (activeTrigger == null) {
+      return;
+    }
+    setDescribedBy(activeTrigger, false);
+    activeTrigger = null;
+    tooltip?.remove();
+    if (activateSkipDelay) {
+      skipDelayUntil = Date.now() + skipDelay;
+    }
+  };
+  const updatePosition = (trigger, floating) =&gt; {
+    const request = ++positionRequest;
+    void computePosition(trigger, floating, {
+      middleware: [
+        offset(tooltipGap),
+        flip({ padding: tooltipGap }),
+        shift({ padding: tooltipGap }),
+        size({
+          padding: tooltipGap,
+          apply({ availableHeight, availableWidth, elements }) {
+            elements.floating.style.setProperty(
+              &quot;--tooltip-available-width&quot;,
+              `${Math.max(0, availableWidth)}px`,
+            );
+            elements.floating.style.setProperty(
+              &quot;--tooltip-available-height&quot;,
+              `${Math.max(0, availableHeight)}px`,
+            );
+          },
+        }),
+      ],
+      placement: getPlacement(trigger),
+      strategy: &quot;fixed&quot;,
+    })
+      .then(({ x, y }) =&gt; {
+        if (activeTrigger !== trigger || request !== positionRequest) {
+          return;
+        }
+        const scale = window.devicePixelRatio || 1;
+        floating.style.transform = `translate(${Math.round(x * scale) / scale}px, ${Math.round(y * scale) / scale}px)`;
+        floating.style.visibility = &quot;visible&quot;;
+      })
+      .catch(() =&gt; {
+        if (activeTrigger === trigger &amp;&amp; request === positionRequest) {
+          closeTooltip(false);
+        }
+      });
+  };
+  const openTooltip = (trigger) =&gt; {
+    const content = getContent(trigger);
+    if (!trigger.isConnected || content.length === 0) {
+      return;
+    }
+    clearOpenTimeout();
+    if (activeTrigger === trigger) {
+      return;
+    }
+    closeTooltip();
+    const floating = getTooltip();
+    floating.textContent = content;
+    floating.style.visibility = &quot;hidden&quot;;
+    floating.style.transform = &quot;translate(0, 0)&quot;;
+    document.body.appendChild(floating);
+    activeTrigger = trigger;
+    setDescribedBy(trigger, true);
+    autoUpdateCleanup = autoUpdate(trigger, floating, () =&gt; {
+      updatePosition(trigger, floating);
+    });
+  };
+  const requestOpen = (trigger, immediate = false) =&gt; {
+    if (
+      getContent(trigger).length === 0 ||
+      activeTrigger === trigger ||
+      pendingTrigger === trigger
+    ) {
+      return;
+    }
+    clearOpenTimeout();
+    pendingTrigger = trigger;
+    const delay =
+      immediate || activeTrigger != null || Date.now() &lt; skipDelayUntil
+        ? 0
+        : hoverDelay;
+    if (delay === 0) {
+      openTooltip(trigger);
+      return;
+    }
+    openTimeout = window.setTimeout(() =&gt; {
+      openTimeout = null;
+      pendingTrigger = null;
+      openTooltip(trigger);
+    }, delay);
+  };
+  const handlePointerOpen = (event) =&gt; {
+    if (event.pointerType === &quot;touch&quot;) {
+      return;
+    }
+    const trigger = getTrigger(event.target);
+    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
+      return;
+    }
+    requestOpen(trigger);
+  };
+  const handleLeave = (event) =&gt; {
+    const trigger = getTrigger(event.target);
+    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
+      return;
+    }
+    if (activeTrigger === trigger || pendingTrigger === trigger) {
+      closeTooltip();
+    }
+  };
+  const handleFocusIn = (event) =&gt; {
+    const trigger = getTrigger(event.target);
+    if (trigger?.matches(&quot;:focus-visible&quot;)) {
+      requestOpen(trigger, true);
+    }
+  };
+  const handleKeyDown = (event) =&gt; {
+    if (event.key === &quot;Escape&quot;) {
+      closeTooltip();
+    }
+  };
+  const handleContextMenu = (event) =&gt; {
+    const trigger = getTrigger(event.target);
+    if (activeTrigger === trigger || pendingTrigger === trigger) {
+      closeTooltip();
+    }
+  };
+  const destroy = () =&gt; {
+    closeTooltip(false);
+    document.removeEventListener(&quot;pointerover&quot;, handlePointerOpen);
+    document.removeEventListener(&quot;pointerout&quot;, handleLeave);
+    document.removeEventListener(&quot;focusin&quot;, handleFocusIn);
+    document.removeEventListener(&quot;focusout&quot;, handleLeave);
+    document.removeEventListener(&quot;keydown&quot;, handleKeyDown);
+    document.removeEventListener(&quot;contextmenu&quot;, handleContextMenu);
+    tooltip = null;
+  };
+
+  document.addEventListener(&quot;pointerover&quot;, handlePointerOpen);
+  document.addEventListener(&quot;pointerout&quot;, handleLeave);
+  document.addEventListener(&quot;focusin&quot;, handleFocusIn);
+  document.addEventListener(&quot;focusout&quot;, handleLeave);
+  document.addEventListener(&quot;keydown&quot;, handleKeyDown);
+  document.addEventListener(&quot;contextmenu&quot;, handleContextMenu);
+  window.addEventListener(&quot;pagehide&quot;, destroy, { once: true });
+})();
+&lt;/script&gt;
+&lt;script id=&quot;codex-visualization-lucide&quot; async src=&quot;https://unpkg.com/lucide@1.17.0/dist/umd/lucide.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+(() =&gt; {
+  const initialize = () =&gt; {
+    globalThis.lucide?.createIcons({ attrs: { width: 16, height: 16 } });
+  };
+  if (globalThis.lucide != null) {
+    initialize();
+    return;
+  }
+  document
+    .getElementById(&quot;codex-visualization-lucide&quot;)
+    ?.addEventListener(&quot;load&quot;, initialize, { once: true });
+})();
+&lt;/script&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;
+"></iframe>
+</body>
+</html>

@@ -45,8 +45,10 @@ futura permanece programada y no consume cupo. Si se ejecuta durante sábado o
 domingo, ese caso puntual se omite porque el dominio sólo permite clases de
 lunes a viernes; el resto de la suite continúa ejecutándose.
 
-La prueba de reejecución de `db/init.sql` está omitida por defecto porque
-requiere Docker Compose y ejecuta `psql` dentro del contenedor de PostgreSQL.
+La prueba de reejecución del seed de demostración está omitida por defecto
+porque requiere Docker Compose y ejecuta `db/init.sql` dentro de PostgreSQL.
+Ese archivo es sólo una capa de compatibilidad para pruebas: el arranque normal
+aplica `db/migrations/*.sql` y no carga alumnas/os ni clases ficticias.
 Con los servicios levantados, habilitarla así:
 
 ```bash
