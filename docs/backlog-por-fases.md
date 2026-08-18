@@ -1,46 +1,59 @@
 # Backlog funcional por fases
 
-## Fase 0 — preparar el piloto
+## Fases técnicas completadas
 
-- Validar en teléfono la agenda semanal y la carga de asistencia existente.
-- Reemplazar semanas fijas y datos ficticios por fechas y datos operativos.
-- Asegurar persistencia transaccional e idempotente, incluida la recuperación
-  después de reiniciar el servidor.
-- Mantener el papel como respaldo y acordar cómo conciliar diferencias.
+- Interfaz móvil para Agenda, Alumnas/os, Clases y Planes.
+- PostgreSQL transaccional con historial, restricciones y migraciones
+  versionadas.
+- Autenticación Google con lista de cuentas autorizadas.
+- Clases de lunes a viernes, sin solapamientos, con profesora y sala fijas.
+- Archivo/reingreso de alumnas/os y vigencias de horarios.
+- Planes mensuales completos o proporcionales, con catálogo inicial de 4 y 8
+  clases y snapshots históricos.
+- CI, auditoría de dependencias, imagen identificable, backup restaurado y
+  publicación gratuita mediante Tailscale Funnel.
+- Base operacional limpia para iniciar la adopción.
 
-**Salida:** se puede completar una clase en la app sin pérdida de datos, pero el
-papel continúa como respaldo.
+## Fase actual — adopción acompañada
 
-## Fase 1 — operar asistencia desde el móvil
+- Patricia usa datos reales para agenda, padrón, planes y asistencia.
+- Se mantiene el papel sólo como contingencia durante el período acordado.
+- Se realiza una entrevista guiada y se registran tareas confusas, bloqueos e
+  incidentes.
+- Se priorizan correcciones por frecuencia, impacto y riesgo de datos.
+- Se revisa semanalmente salud, backups y disponibilidad del equipo.
 
-- Priorizar la agenda del día y el acceso rápido a cada sesión.
-- Marcar en bloque, corregir excepciones y guardar con estados claros de
-  progreso, éxito y error.
-- Reabrir y corregir fechas pasadas sin duplicar registros.
-- Detectar pendientes y verificar el cierre diario.
+**Salida:** Patricia decide continuar y completa el trabajo habitual sin ayuda
+técnica ni pérdida de datos.
 
-**Salida:** tras el período paralelo acordado, la app pasa a ser la fuente de
-asistencia y el papel queda solo para contingencias.
+## Próxima fase — confiabilidad operativa
 
-## Fase 2 — gestionar padrón y agenda
+- Automatizar backups cifrados fuera del equipo y ensayar restauraciones.
+- Incorporar logs estructurados, IDs de solicitud, métricas y alertas.
+- Agregar rate limiting y auditoría de cambios administrativos.
+- Resolver conflictos de edición simultánea.
+- Definir política para fechas futuras, sesiones excepcionales y cierre de
+  clases sin registrar.
 
-- Incorporar búsqueda, alta, edición, desactivación y reingreso de alumnas.
-- Gestionar asignaciones habituales con unicidad, vigencia y control de cupo.
-- Crear y editar plantillas semanales sin borrar historial.
-- Definir primero los contratos de escritura y las decisiones de vigencia.
+**Salida:** el servicio puede operarse y recuperarse con procedimientos medidos.
 
-**Salida:** las tareas habituales de agenda y padrón ya no requieren planillas.
+## Fase futura — publicación productiva
 
-## Fase 3 — trazabilidad y excepciones
+- Elegir Raspberry Pi/equipo dedicado o proveedor cloud.
+- Definir presupuesto, disponibilidad y responsable de operación.
+- Registrar dominio y configurar DNS, HTTPS y callback OAuth definitivo.
+- Migrar la base mediante backup restaurable y migraciones versionadas.
+- Ejecutar smoke tests y mantener rollback hasta la aceptación.
 
-- Aplicar la política definida para fechas futuras y sesiones excepcionales.
-- Agregar auditoría de correcciones si producto la considera necesaria.
-- Mejorar la contingencia sin introducir automatizaciones fuera de alcance.
+**Salida:** el piloto deja de depender de la computadora personal.
 
-**Salida:** el salón puede investigar correcciones y manejar excepciones con
-reglas explícitas.
+## Evoluciones de producto posteriores
 
-## No planificado como alcance inmediato
+- Pagos y vencimientos.
+- Indicadores de presentismo, ausentismo, permanencia y estacionalidad.
+- Portal o reservas para alumnas/os.
+- Mensajería y recordatorios.
+- Sesiones extraordinarias y feriados.
 
-Pagos, portal de alumnas, reservas públicas, comunicaciones automáticas e
-integraciones externas.
+Ninguna de estas evoluciones debe comprometer los snapshots mensuales ni el
+historial ya guardado.

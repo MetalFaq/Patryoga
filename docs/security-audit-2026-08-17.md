@@ -7,6 +7,10 @@
 - Next.js se actualizó de 15.5.22 a 16.3.1 para retirar las alertas que
   alcanzaban la imagen productiva.
 - No se usó `npm audit fix --force`.
+- La imagen operacional se construyó con etiquetas OCI de origen, versión,
+  revisión y fecha, y ejecuta como usuario no privilegiado.
+- PostgreSQL no publica puertos al host; la exposición pública llega sólo a la
+  aplicación mediante Tailscale Funnel.
 
 ## Hallazgos iniciales
 
@@ -35,3 +39,21 @@ Referencias de los avisos reportados por npm:
 El workflow `.github/workflows/ci.yml` vuelve a ejecutar `npm audit` y bloquea
 la validación ante vulnerabilidades altas o críticas. Un resultado limpio sólo
 representa la base de avisos disponible en el momento de cada ejecución.
+
+## Alcance y riesgo residual
+
+Esta revisión cubre avisos npm y controles básicos del despliegue. No es un
+pentest, un análisis estático integral ni un escaneo del sistema Windows, la
+imagen, Google o Tailscale.
+
+Durante el piloto también deben mantenerse:
+
+- Google con verificación en dos pasos y lista mínima de cuentas autorizadas;
+- Windows actualizado, bloqueado cuando no se usa y sin suspensión mientras
+  presta servicio;
+- secretos y backups fuera de Git;
+- revisión periódica de CI, logs y nuevas alertas;
+- PostgreSQL sin puerto público y sin uso de `docker compose down -v`.
+
+Los riesgos operativos y controles pendientes están en
+`docs/pilot-risks-and-roadmap.md`.

@@ -2,46 +2,64 @@
 
 ## Objetivo
 
-Resolver desde el teléfono la agenda, el padrón y la asistencia del salón, con
-el menor uso posible de papel. Es un flujo interno para una única administradora;
-no contempla autogestión de alumnas.
+Resolver desde el teléfono la agenda, el padrón, los planes mensuales y la
+asistencia del salón, con el menor uso posible de papel. Es un flujo interno;
+no contempla todavía autogestión de alumnas/os ni pagos.
 
-## Antes de la primera clase
+## Preparación del mes
 
-1. Abrir la agenda en la semana vigente y ubicar las sesiones del día.
-2. Revisar horario, docente, sala, cupo y alumnas habituales de cada sesión.
-3. Si hay un alta o cambio, buscar primero a la alumna para evitar duplicados,
-   actualizar sus datos administrativos y ajustar su asignación habitual.
-4. Antes de asignar, comprobar que el cupo no sea superado. Quitar una
-   asignación solo debe afectar sesiones futuras y nunca borrar asistencias.
+1. Revisar que continúen activos los planes necesarios. El catálogo inicial
+   incluye 4 y 8 clases y permite agregar otros límites.
+2. Abrir la ficha de cada alumna/o y revisar sus horarios habituales.
+3. Elegir el mes, plan y modalidad completa o proporcional.
+4. Para un ingreso proporcional, indicar la fecha de comienzo y revisar el
+   cupo calculado con las sesiones habituales restantes.
+5. Confirmar el pool mensual. La ficha muestra sesiones incluidas, usadas,
+   restantes y clases adicionales fuera del plan.
 
-La consulta de agenda y alumnas ya está contemplada por el contrato. Las altas,
-ediciones, bajas y cambios de plantillas o asignaciones requieren contratos
-nuevos coordinados antes de implementarse.
+La asignación guarda un snapshot: editar después el plan o los horarios no
+reescribe meses anteriores.
 
-## Durante cada clase
+## Antes de una clase
 
-1. Abrir la sesión por fecha y `classId`.
-2. Partir de los estados guardados; sin registro previo, cada alumna aparece
-   como `unmarked` (pendiente).
-3. Marcar `present` o `absent`. Se puede marcar a todas como presentes y luego
-   corregir excepciones.
-4. Revisar los totales de presentes, ausentes y pendientes.
-5. Guardar explícitamente. Se pueden enviar solo los cambios de alumnas
-   asignadas y una solicitud inválida no debe guardar ninguna entrada.
-6. Ante un error, conservar los cambios visibles y permitir reintentar. Al
-   confirmar, volver a abrir la sesión debe mostrar el estado guardado.
+1. Abrir Agenda y elegir Día, Semana o un Rango manual.
+2. Ubicar la sesión. Las clases activas son de lunes a viernes; profesora y sala
+   están fijadas por el sistema.
+3. Revisar cupo, alumnas/os habituales y progreso del plan mensual.
+4. Si hay un alta o cambio, buscar primero a la persona para evitar duplicados,
+   actualizar su ficha y ajustar horarios.
+5. Quitar un horario afecta sesiones futuras y conserva asistencia e historia.
+
+## Registrar asistencia
+
+1. Abrir la sesión de la fecha correcta.
+2. Marcar a cada alumna/o como `Presente` o `Ausente`.
+3. Se puede marcar a todas/os presentes y corregir excepciones.
+4. Guardar explícitamente y esperar la confirmación.
+5. Ante un error, conservar los cambios visibles, revisar la conexión y
+   reintentar cuando la aplicación vuelva a estar saludable.
+
+El estado interno `unmarked` significa que la sesión todavía no fue registrada;
+no es una tercera opción que Patricia deba seleccionar. Dentro del pool, tanto
+presente como ausente consume una clase cuando la fecha ya ocurrió.
 
 ## Cierre y correcciones
 
-- Antes de cerrar la clase, revisar los pendientes; `unmarked` sigue siendo un
-  estado válido y no debe convertirse automáticamente en ausencia.
-- Registrar llegadas tardías o corregir errores en la misma sesión.
-- Consultar una fecha pasada y corregirla con el mismo flujo. Guardar otra vez
-  la misma alumna, clase y fecha reemplaza su estado sin duplicar registros.
-- Usar teléfono y notas solo como información administrativa; no forman parte
-  del registro de asistencia.
+- Revisar sesiones pasadas que continúen sin registrar.
+- Corregir llegadas tardías o errores abriendo la misma fecha; el nuevo estado
+  reemplaza al anterior sin duplicarlo.
+- Archivar una alumna/o cuando deja el salón. El reingreso conserva su identidad
+  e historia, pero requiere elegir nuevamente horarios y un plan mensual.
+- Eliminar una clase sin historia la borra; si tiene referencias históricas se
+  retira de la agenda futura y conserva sus registros.
 
-Mientras continúe el piloto, el papel sirve únicamente como respaldo de
-contingencia. La app puede reemplazarlo cuando la persistencia sobreviva a
-reinicios y el salón complete un período de uso paralelo sin pérdida de datos.
+## Contingencia
+
+Mientras continúe el piloto, el papel puede servir como respaldo si la
+computadora, internet o Tailscale no están disponibles. No cargar simultáneamente
+desde dos dispositivos la misma ficha o sesión: todavía no existe una alerta de
+conflicto entre ediciones concurrentes.
+
+La persona que opera el equipo sigue `docs/adoption-pilot-runbook.md` para
+encendido, salud y recuperación. La app puede reemplazar el papel cuando
+Patricia complete el período de adopción acordado sin pérdidas de datos.

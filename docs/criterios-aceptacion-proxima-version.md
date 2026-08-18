@@ -1,50 +1,50 @@
-# Criterios de aceptación de la próxima versión
+# Criterios de aceptación del piloto
 
 ## P0 — operación diaria confiable
 
-1. **Agenda móvil.** En una pantalla de 360 px de ancho, la administradora puede
-   consultar la semana vigente, cambiar de semana y abrir una sesión sin
-   desplazamiento horizontal ni controles superpuestos. Cada sesión habitual
-   se genera en el día semanal de su plantilla.
-2. **Datos de sesión.** Cada sesión muestra fecha, horario, docente, sala, cupo,
-   alumnas asignadas y totales por estado. Una sesión nueva muestra `unmarked`
-   salvo que exista asistencia guardada.
-3. **Carga rápida.** Se puede marcar individualmente `present`, `absent` o
-   `unmarked`, marcar a todas presentes y corregir excepciones antes de guardar.
-4. **Guardado seguro.** El guardado es explícito, indica progreso y confirma el
-   éxito. Si falla, informa el error, mantiene los cambios y permite reintentar.
-   Una entrada inválida rechaza toda la solicitud.
-5. **Reapertura e idempotencia.** Al reabrir la sesión aparecen los estados
-   guardados. Repetir el mismo guardado no duplica asistencia y una corrección
-   reemplaza el estado de `(classId, date, studentId)`.
-6. **Persistencia.** Agenda, alumnas, asignaciones y asistencias sobreviven a un
-   reinicio del servidor y conservan historial; los datos ficticios no son la
-   fuente operativa del piloto.
+1. **Acceso móvil.** Desde teléfono y escritorio, una cuenta Google autorizada
+   puede iniciar sesión por el origen HTTPS del piloto. Una cuenta anónima o no
+   autorizada no accede a páginas ni API de negocio.
+2. **Agenda.** La administradora puede consultar Día, Semana o un Rango manual,
+   abrir sesiones y trabajar sin desplazamiento horizontal en 360 px.
+3. **Asistencia.** La interfaz ofrece únicamente Presente y Ausente. El guardado
+   es explícito, atómico e idempotente; una corrección reemplaza el estado
+   anterior sin duplicarlo.
+4. **Persistencia.** Alumnas/os, clases, horarios, asistencias y planes
+   sobreviven al reinicio de la aplicación y conservan historial.
+5. **Salud.** `db` y `app` quedan saludables después de `docker compose up -d`,
+   las migraciones terminan correctamente y `/api/health` responde `status: ok`.
+6. **Contingencia.** Existe un backup restaurable validado y no se requiere
+   borrar el volumen para recuperar la aplicación.
 
-## P1 — menos mantenimiento en papel
+## P1 — gestión del salón
 
-1. **Padrón.** Se puede buscar, crear y editar una alumna con nombre, teléfono y
-   notas opcionales, manteniendo un identificador estable.
-2. **Bajas sin pérdida.** Desactivar una alumna no borra asistencias anteriores;
-   el reingreso respeta la decisión de producto sobre identidad y vigencia.
-3. **Asignaciones.** Se puede incorporar o quitar una alumna de una clase
-   habitual, sin duplicar el par activo y sin superar el cupo. El cambio no
-   altera asistencias pasadas.
-4. **Agenda semanal.** Se pueden mantener plantillas de lunes a sábado con día,
-   hora, duración, docente, sala y cupo. Editarlas no elimina historia.
+1. **Padrón.** Se puede buscar, crear y editar una alumna/o con nombre, teléfono
+   y notas opcionales, manteniendo un identificador interno estable.
+2. **Bajas y reingresos.** Archivar conserva asistencias e historia. Reingresar
+   conserva la identidad, pero no reactiva horarios anteriores.
+3. **Horarios.** Se pueden agregar o quitar asignaciones habituales sin superar
+   el cupo, duplicar una relación activa ni modificar asistencia pasada.
+4. **Clases.** Las plantillas activas se crean de lunes a viernes, sin campos de
+   profesora o sala, y no pueden solaparse. La eliminación preserva historia
+   cuando existen referencias.
+5. **Planes mensuales.** Existen planes de 4 y 8 clases, se pueden crear otros y
+   asignar modalidad completa o proporcional con snapshot mensual.
+6. **Consumo.** Presente y Ausente consumen una clase incluida cuando la fecha
+   ya ocurrió; una sesión futura, no registrada o fuera del pool no consume.
 
-Estos criterios P1 requieren ampliar el contrato de API de forma coordinada;
-este documento no define endpoints ni cambia los contratos vigentes.
+## P2 — adopción y operación
 
-## P2 — control operativo
-
-1. Se identifican con claridad sesiones con alumnas pendientes.
-2. Las correcciones de fechas pasadas usan el mismo flujo y muestran una
-   confirmación inequívoca.
-3. La conducta ante asistencia futura, sesiones excepcionales y auditoría se
-   implementa solo después de resolver las decisiones pendientes.
+1. Patricia puede completar las tareas anteriores sin ayuda técnica durante el
+   período acordado.
+2. Windows puede permanecer bloqueado con la pantalla apagada, pero no entra en
+   suspensión ni hibernación mientras presta servicio conectado a corriente.
+3. La persona operadora puede comprobar Docker, salud y Funnel con el runbook
+   sin reiniciar PostgreSQL ni exponer secretos.
+4. Los incidentes, dudas y mejoras se registran para decidir si se avanza a
+   dominio y alojamiento definitivos.
 
 ## Fuera de alcance inmediato
 
-Pagos, portal o acceso de alumnas, reservas autogestionadas, mensajes y otras
-automatizaciones.
+Pagos, portal o acceso de alumnas/os, reservas autogestionadas, mensajería,
+disponibilidad garantizada, dominio propio y alojamiento cloud definitivo.

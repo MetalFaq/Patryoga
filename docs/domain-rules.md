@@ -100,8 +100,9 @@
 - PostgreSQL conserva los cambios al reiniciar la aplicacion.
 - PostgreSQL aplica claves unicas, vigencias y transacciones para mantener las
   reglas anteriores. Ninguna baja o eliminacion borra asistencias guardadas.
-- Las migraciones, autenticacion, auditoria de cambios y politicas de borrado se
-  definiran en tareas posteriores.
+- Las migraciones versionadas y la autenticacion Google ya forman parte de la
+  base operacional. La auditoria detallada de cambios administrativos sigue
+  pendiente.
 
 ## Decisiones pendientes de producto
 
