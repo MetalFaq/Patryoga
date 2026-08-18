@@ -39,6 +39,41 @@ El endpoint público no demuestra disponibilidad de PostgreSQL. La readiness de
 base se comprueba con el healthcheck propio de `db`; no se agregó una nueva
 ruta pública de diagnóstico.
 
+## Segunda fase de endurecimiento — 18 de agosto de 2026
+
+La segunda ola cerró privilegios de base y control de tráfico sin cambiar el
+alcance funcional del piloto:
+
+- `app` usa un rol PostgreSQL runtime separado. Puede operar tablas y secuencias
+  de negocio, pero no crear esquemas, tablas o roles ni acceder a
+  `schema_migrations`;
+- el rol runtime no es superusuario y tampoco tiene `createdb`, `createrole`,
+  `inherit`, `replication` ni `bypassrls`. El propietario configurado en
+  `POSTGRES_USER` queda reservado para migraciones;
+- el provisionamiento es idempotente. Como los grants no alcanzan
+  automáticamente a tablas futuras, `migrate` debe volver a ejecutarse después
+  de incorporar cualquier migración que cree tablas o secuencias;
+- un rate limiter fixed-window, en memoria y por proceso, separa autenticación
+  y API. Por defecto permite 60 solicitudes de autenticación y 600 de API por
+  ventana de 60 segundos; al exceder responde 429 con `Retry-After`;
+- `/api/health` queda exento. La IP de `X-Forwarded-For` sólo se considera
+  confiable mientras la aplicación siga enlazada a loopback detrás del Funnel;
+- el límite en memoria es adecuado para una única instancia, no para un
+  despliegue con múltiples réplicas;
+- la ACL de `.env` quedó acotada a operación, administración, sistema y
+  mantenimiento de Codex. La ACL de la carpeta de backups no pudo modificarse
+  por propiedad/permisos de Windows y requiere una acción posterior con
+  elevación administrativa;
+- se construyó y desplegó una imagen identificable `0.1.2`; la aplicación quedó
+  saludable y la verificación pública de autenticación/headers pasó 5 de 5
+  casos.
+
+Antes del despliegue se creó un backup, se validó su catálogo y se restauró por
+completo en una base temporal. Los conteos coincidieron. Compose recreó el
+contenedor `db` al corregir un drift de configuración pendiente de fase 1, pero
+conservó el volumen y los datos; después se recreó sólo `app` y `db` permaneció
+estable.
+
 ## Hallazgos npm iniciales y resolución
 
 La primera consulta detectó seis vulnerabilidades altas y ninguna crítica:
@@ -69,10 +104,10 @@ etiquetas OCI de origen, versión, revisión y fecha.
 
 | Hallazgo | Riesgo | Recomendación |
 | --- | --- | --- |
-| No hay rate limiting | Tráfico abusivo puede consumir recursos o presionar login/API | Limitar por IP y ruta; evaluar protección perimetral antes de producción |
+| No había rate limiting | Tráfico abusivo podía consumir recursos o presionar login/API | **Resuelto para el piloto en fase 2:** límites separados Auth/API con 429; para múltiples réplicas se necesita un almacén compartido |
 | `/api/health` era público y ejecutaba `SELECT 1` | Cada solicitud pública generaba trabajo contra PostgreSQL | **Resuelto en fase 1:** liveness barato sin acceso a DB; readiness queda en el healthcheck interno de `db` |
-| El rol runtime de PostgreSQL es superusuario | Una inyección o compromiso de app tendría privilegios excesivos | Crear rol de aplicación sin superuser y rol separado para migraciones |
-| ACL local de `.env` y backups demasiado amplia | Otros usuarios o procesos locales podrían leer secretos y datos | Restringir permisos al usuario operador y cuentas de servicio necesarias |
+| El rol runtime de PostgreSQL era superusuario | Una inyección o compromiso de app tenía privilegios excesivos | **Resuelto en fase 2:** rol runtime mínimo y propietario reservado para migraciones; reprovisionar grants después de tablas futuras |
+| ACL local de `.env` y backups demasiado amplia | Otros usuarios o procesos locales podrían leer secretos y datos | **Parcialmente resuelto en fase 2:** `.env` restringido; carpeta de backups pendiente con UAC/administrador |
 | Backups sólo locales y manuales | Falla o pérdida del equipo puede eliminar servicio y respaldo | Automatizar copia cifrada fuera del host, retención y restauraciones periódicas |
 | Faltaban headers CSP, X-Frame-Options, HSTS, nosniff, Referrer-Policy y Permissions-Policy | Menor defensa del navegador frente a inyección, framing y fuga de contexto | **Parcialmente resuelto en fase 1:** headers activos y CSP Report-Only; falta observarla y decidir enforcement |
 | Logs sin request IDs, métricas ni alertas | Diagnóstico tardío y poca correlación de incidentes | La rotación quedó resuelta en fase 1; agregar IDs, métricas de salud y alertas sin datos personales |
@@ -115,6 +150,9 @@ validación ante vulnerabilidades altas o críticas. Además:
 3. comprobar acceso público, OAuth, firewall y puertos tras cambios de red;
 4. verificar backups y restauraciones sin imprimir datos ni credenciales;
 5. registrar remediaciones P1/P2 con evidencia y fecha.
+
+El backup externo cifrado no está implementado: antes de automatizarlo debe
+elegirse el destino, la retención y quién puede recuperar la clave.
 
 Los riesgos operativos y el roadmap están en
 `docs/pilot-risks-and-roadmap.md`.

@@ -13,9 +13,9 @@ garantizada.
 | Riesgo | Impacto | Control actual | Pendiente antes de producción |
 | --- | --- | --- | --- |
 | Corte de luz, internet, reinicio o suspensión | La app queda fuera de servicio | Equipo conectado, sin suspensión/hibernación y verificación diaria | Host dedicado o nube, alertas y recuperación automática |
-| URL pública descubierta o tráfico abusivo | Consumo de CPU, memoria o ancho de banda | OAuth, API protegida, health sin DB, headers defensivos y límites del Funnel | Rate limiting, WAF, métricas y alertas |
+| URL pública descubierta o tráfico abusivo | Consumo de CPU, memoria o ancho de banda | OAuth, API protegida, health sin DB, headers defensivos, Funnel y rate limiting por proceso | WAF, métricas, alertas y limiter compartido si existen múltiples réplicas |
 | Cuenta Google autorizada comprometida | Acceso administrativo a datos | Correo verificado y lista explícita | MFA obligatorio, revisión de accesos y auditoría administrativa |
-| Compromiso de Windows o Docker | Exposición de `.env`, base y backups | Sesión bloqueada, DB sin puerto y contenedor no root | Host dedicado, parches, cifrado y principio de mínimo privilegio |
+| Compromiso de Windows o Docker | Exposición de `.env`, base y backups | Sesión bloqueada, DB sin puerto, contenedor no root y ACL de `.env` restringida | Corregir ACL de backups con elevación; host dedicado, parches y cifrado |
 | Fallo o pérdida del disco local | Pérdida de datos desde el último respaldo externo | Backup lógico validado localmente | Backups automáticos cifrados fuera del equipo y pruebas de restauración |
 | Escrituras simultáneas | Una edición posterior puede reemplazar otra | Transacciones, constraints e idempotencia del backend | Control de versión/optimistic locking y registro de cambios |
 | Dependencia de Google o Tailscale | Login o acceso público indisponible | Salud local independiente y procedimientos de diagnóstico | Dominio propio, estrategia de contingencia y monitoreo externo |
@@ -35,11 +35,16 @@ bloqueante P0 del piloto.
 
 La primera fase incorporó headers de navegador, CSP Report-Only, liveness sin
 consultas a PostgreSQL, rotación de logs y hardening básico del contenedor de la
-app. Las prioridades P1 restantes son reducir privilegios del rol runtime de
-PostgreSQL, restringir ACL de `.env` y backups, automatizar copias cifradas
-externas, incorporar rate limiting, completar observabilidad y escanear la
-imagen completa. También debe resolverse la dependencia de Docker Desktop
-respecto de la sesión Windows.
+app. La segunda fase separó el rol runtime de PostgreSQL, agregó rate limiting
+por proceso, restringió la ACL de `.env` y validó la imagen `0.1.2`, salud,
+autenticación y headers. El backup previo se restauró por completo en una base
+temporal y sus conteos coincidieron.
+
+Las prioridades P1 restantes son corregir la ACL de la carpeta de backups con
+elevación administrativa, automatizar copias cifradas externas, completar
+observabilidad y escanear la imagen completa. También debe resolverse la
+dependencia de Docker Desktop respecto de la sesión Windows. El destino del
+backup externo todavía no fue elegido.
 
 Como defensa en profundidad quedan branch protection/Dependabot, pines por
 SHA/digest, seguimiento de Auth.js beta y sesiones, hardening adicional de
@@ -82,15 +87,25 @@ La inversión en dominio y alojamiento definitivo tiene sentido cuando:
 ### 2. Endurecer operación
 
 - Automatizar backups cifrados con retención y copia fuera del equipo.
-- Restringir ACL locales y separar roles PostgreSQL de migración y runtime.
+- Corregir con UAC/administrador la ACL de la carpeta de backups; la de `.env`
+  ya está restringida.
+- Mantener separados los roles PostgreSQL de migración y runtime, y ejecutar
+  provisionamiento después de futuras tablas o secuencias.
 - Incorporar logs estructurados, IDs de solicitud, métricas y alertas; la
   rotación básica ya está aplicada.
-- Agregar rate limiting y auditoría administrativa; los headers defensivos ya
-  están aplicados y la CSP debe observarse antes de exigirla.
+- Mantener el rate limiting actual para una sola instancia y migrarlo a un
+  almacén compartido si se despliegan múltiples réplicas.
+- Agregar auditoría administrativa; los headers defensivos ya están aplicados
+  y la CSP debe observarse antes de exigirla.
 - Mantener health público como liveness y readiness de DB en su healthcheck
   interno.
 - Escanear dependencias npm e imagen completa en CI.
 - Establecer actualización mensual de dependencias e imagen base.
+
+**Completado en fase 2:** privilegios runtime mínimos, límites separados
+Auth/API, ACL de `.env`, backup/restore previo, imagen `0.1.2` y verificación
+pública 5/5. **Pendiente:** ACL de backups, destino cifrado externo,
+observabilidad, escaneo de imagen y operación sin dependencia de sesión.
 
 ### 3. Elegir alojamiento
 
@@ -126,7 +141,7 @@ primero con el hostname del proveedor y conectar un dominio propio después.
 - Dominio, registrador y presupuesto anual.
 - Objetivos de disponibilidad y tiempo máximo de recuperación.
 - Proveedor de backups externos y período de retención.
-- WAF, rate limiting, métricas y alertas concretas.
+- WAF, rate limiting distribuido, métricas y alertas concretas.
 
 Estas decisiones quedan deliberadamente posteriores a la adopción; no bloquean
 el piloto actual.

@@ -24,11 +24,13 @@ Tailscale Funnel (servicio Windows, hostname asignado)
         v
 Next.js 16 + Auth.js (contenedor app, usuario nextjs)
         |                  |
-        | SQL interno      +--> Google OAuth 2.0
+        | rol runtime      +--> Google OAuth 2.0
         v
 PostgreSQL 16 (contenedor db, sin puerto publicado)
         |
         +--> volumen Docker yoga_postgres_data
+
+migrate -- rol propietario --> esquema + grants runtime
 
 GitHub --> CI: audit + tipos + lint + build
 Dockerfile + commit --> imagen OCI identificable
@@ -43,11 +45,15 @@ db/migrations --> servicio migrate --> schema_migrations
 | Auth.js + Google | Crea sesiones JWT y autoriza sólo correos verificados de la lista permitida | El proxy protege páginas y API de negocio |
 | API App Router | Valida entradas y traduce errores del dominio a HTTP | Delega transacciones a los repositorios del servidor |
 | Repositorios | Aplica solapamientos, cupos, vigencias, asistencia y pools mensuales | Usa el pool PostgreSQL de `src/lib/db.ts` |
-| PostgreSQL | Fuente de verdad e historial operacional | Persiste en un volumen nombrado no expuesto al host |
-| Migrador | Aplica cada SQL una sola vez y verifica su checksum | Registra el resultado en `schema_migrations` antes de iniciar la app |
+| PostgreSQL | Fuente de verdad e historial operacional | El rol runtime sólo usa DML/secuencias de negocio; el propietario queda reservado para migrar |
+| Migrador | Aplica cada SQL una sola vez, verifica su checksum y provisiona grants | Registra el resultado en `schema_migrations` antes de iniciar la app |
 | Docker Compose | Ordena base, migración, aplicación, salud y reinicios | Inyecta configuración desde `.env`, que no se versiona |
 | Tailscale Funnel | Termina HTTPS y reenvía sólo la web local | No publica PostgreSQL ni concede navegación por la LAN |
 | GitHub Actions | Control de integración por cada cambio remoto | Ejecuta auditoría, tipos, lint y build |
+
+La imagen operacional validada para el cierre de fase 2 es la versión `0.1.2`.
+La aplicación quedó saludable y los cinco casos públicos de autenticación y
+headers pasaron.
 
 ## Flujos principales
 
@@ -63,12 +69,19 @@ db/migrations --> servicio migrate --> schema_migrations
 ### Escritura de datos
 
 1. La interfaz envía JSON a una ruta de negocio.
-2. La ruta valida el contrato documentado en `docs/api-contract.md`.
-3. El repositorio ejecuta la operación transaccional en PostgreSQL.
-4. Las restricciones de base y los bloqueos del dominio evitan duplicados,
+2. El rate limiter en memoria aplica ventanas separadas para autenticación y
+   API; devuelve 429 y `Retry-After` cuando se excede el límite.
+3. La ruta valida el contrato documentado en `docs/api-contract.md`.
+4. El repositorio ejecuta la operación transaccional con el rol runtime.
+5. Las restricciones de base y los bloqueos del dominio evitan duplicados,
    solapamientos y cupos inconsistentes.
-5. La respuesta actualiza la interfaz; PostgreSQL conserva el resultado aunque
+6. La respuesta actualiza la interfaz; PostgreSQL conserva el resultado aunque
    la aplicación se reinicie.
+
+El límite es fixed-window, por proceso y de una sola instancia. La confianza en
+`X-Forwarded-For` depende de mantener la aplicación sólo en loopback detrás de
+Funnel; un despliegue multi-réplica necesita almacenamiento compartido y una
+política explícita de proxies confiables. `/api/health` está exento.
 
 ### Arranque y evolución del esquema
 
@@ -76,7 +89,11 @@ db/migrations --> servicio migrate --> schema_migrations
 2. `migrate` recorre `db/migrations/*.sql` en orden.
 3. Una migración nueva se aplica en una transacción y registra versión y
    checksum. Una migración ya aplicada pero modificada hace fallar el arranque.
-4. `app` inicia únicamente cuando `migrate` termina correctamente.
+4. El provisionamiento idempotente garantiza el rol runtime y sus permisos
+   sobre tablas y secuencias existentes.
+5. Toda migración futura que cree tablas o secuencias debe ser seguida por
+   `migrate` para otorgar los grants runtime correspondientes.
+6. `app` inicia únicamente cuando `migrate` termina correctamente.
 
 ## Modelo de datos relacionado
 
@@ -100,8 +117,10 @@ dominio está detallado en `docs/domain-rules.md` y el HTTP en
 - La URL pública no es un secreto; la protección depende de Google, la lista de
   acceso y los controles del servidor.
 - `.env` contiene secretos de runtime y permanece fuera de Git.
-- Los backups se guardan en almacenamiento local ignorado por Git. No deben
-  copiarse a documentación ni a tickets.
+- La ACL de `.env` está restringida a las identidades operativas necesarias.
+- Los backups se guardan en almacenamiento local ignorado por Git. Su carpeta
+  todavía conserva una ACL más amplia de la deseada; corregirla requiere
+  elevación administrativa. No deben copiarse a documentación ni a tickets.
 - La imagen corre como usuario no privilegiado, pero Docker Desktop y la cuenta
   administradora del equipo siguen siendo activos críticos.
 

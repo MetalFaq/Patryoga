@@ -5,13 +5,20 @@
 El piloto quedó preparado con:
 
 - código respaldado en GitHub y controles de CI;
-- imagen OCI identificable por versión, commit y fecha;
+- imagen OCI `0.1.2` identificable por versión, commit y fecha;
 - migraciones versionadas registradas en PostgreSQL;
+- rol runtime PostgreSQL sin privilegios administrativos y propietario
+  reservado para migraciones;
+- rate limiting separado para autenticación y API, con respuesta 429;
 - auditoría npm sin vulnerabilidades conocidas al 17 de agosto de 2026;
 - backup lógico restaurado con éxito en una base aislada;
 - base operacional limpia, conservando el esquema y los planes de 4 y 8
   clases;
 - acceso HTTPS mediante Tailscale Funnel y autenticación Google.
+
+El backup previo a fase 2 fue validado y restaurado por completo en una base
+temporal, con conteos coincidentes. La copia externa cifrada continúa pendiente
+hasta elegir un destino.
 
 No publicar en la documentación el hostname, correos permitidos, credenciales,
 IDs de cuenta ni ubicación o hash de los respaldos.
@@ -80,6 +87,7 @@ reemplaza alertas ni backups.
 | `app` no está saludable | `docker compose logs --since 15m app` | Confirmar que `migrate` terminó y que la base está saludable |
 | Google rechaza el callback | Comparar el origen público con `AUTH_URL` y la URI autorizada de Google | Corregir sólo la configuración; recrear únicamente `app` |
 | La API devuelve 401 | Verificar sesión y cuenta autorizada | Cerrar sesión y entrar con la cuenta correcta |
+| La API devuelve 429 | Revisar `Retry-After` y evitar recargas repetidas | Esperar el intervalo indicado; si el uso normal lo dispara, registrar la ruta y frecuencia antes de ajustar límites |
 | La API devuelve 503 | Revisar `/api/health`, configuración y logs | No continuar cargando datos hasta recuperar la salud |
 
 ## Reinicio mínimo
@@ -93,6 +101,12 @@ docker compose ps
 
 No reiniciar la base para recargar una página. Nunca usar
 `docker compose down -v`: elimina el volumen persistente.
+
+En el cierre de fase 2 Compose recreó `db` una vez para corregir drift de
+configuración heredado, pero conservó el volumen y los datos. Esto no convierte
+la recreación de la base en un paso rutinario: comprobar primero diff de
+Compose, backup y volumen. La actualización final recreó sólo `app` y dejó `db`
+estable.
 
 Después de reiniciar Windows:
 
@@ -119,8 +133,15 @@ Antes de incorporar una versión:
 3. crear un backup y probar su catálogo o restauración aislada;
 4. construir una imagen con versión y commit identificables;
 5. dejar que `migrate` aplique migraciones nuevas;
-6. realizar smoke tests locales y públicos;
-7. conservar la etiqueta de imagen anterior para rollback.
+6. si una migración crea tablas o secuencias, confirmar que el provisionamiento
+   volvió a otorgar permisos al rol runtime;
+7. realizar smoke tests locales y públicos;
+8. conservar la etiqueta de imagen anterior para rollback.
+
+La ACL de `.env` ya está restringida. La carpeta local de backups sigue
+pendiente de corrección con permisos elevados de Windows; no ampliar sus
+permisos ni mover copias a ubicaciones compartidas. Hasta elegir un destino
+externo cifrado, los backups continúan siendo manuales y locales.
 
 Las instrucciones completas de publicación y rollback están en
 `docs/production-runbook.md`.

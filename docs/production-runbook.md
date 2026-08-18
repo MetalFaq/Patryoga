@@ -9,6 +9,10 @@ restaurado, base operacional limpia y publicación HTTPS mediante Tailscale
 Funnel. Se conservaron el esquema, `schema_migrations` y los planes iniciales de
 4 y 8 clases.
 
+La fase 2 validó la imagen `0.1.2`, separó el rol runtime del propietario de
+PostgreSQL y agregó límites de solicitudes. El backup previo fue restaurado por
+completo en una base temporal y sus conteos coincidieron.
+
 El dominio propio, Cloudflare y el alojamiento permanente se posponen hasta
 confirmar adopción. El runbook diario del piloto está en
 `docs/adoption-pilot-runbook.md`.
@@ -19,10 +23,12 @@ confirmar adopción. El runbook diario del piloto está en
 2. CI remota aprobada; `npm audit`, typecheck, lint y build sin errores.
 3. Backup PostgreSQL nuevo y restauración completa en una base aislada.
 4. Migraciones aplicadas mediante `schema_migrations`.
-5. Imagen OCI identificada por versión, commit y fecha.
-6. Origen HTTPS estable y callback OAuth exacto verificados.
-7. Smoke tests autenticados desde escritorio y teléfono.
-8. Etiqueta anterior disponible y procedimiento de rollback acordado.
+5. Provisionamiento idempotente ejecutado y grants runtime verificados para
+   todas las tablas y secuencias nuevas.
+6. Imagen OCI identificada por versión, commit y fecha.
+7. Origen HTTPS estable y callback OAuth exacto verificados.
+8. Smoke tests autenticados desde escritorio y teléfono.
+9. Etiqueta anterior disponible y procedimiento de rollback acordado.
 
 ## Migraciones
 
@@ -34,6 +40,13 @@ Las migraciones aplicadas son inmutables: si cambia su checksum, el despliegue
 falla cerrado. Toda evolución futura debe agregarse como un archivo nuevo con
 un número mayor.
 
+La aplicación no usa el propietario de la base. Su rol runtime puede realizar
+DML y usar secuencias de negocio, pero no crear esquemas, tablas o roles ni
+consultar `schema_migrations`. El propietario configurado en `POSTGRES_USER`
+queda reservado para `migrate`. El provisionamiento es idempotente, pero debe
+ejecutarse después de toda migración que cree tablas o secuencias para conceder
+los grants runtime nuevos.
+
 `db/init.sql` no participa del arranque operacional. Es una capa de
 compatibilidad que carga el seed ficticio exclusivamente para pruebas.
 
@@ -42,10 +55,10 @@ compatibilidad que carga el seed ficticio exclusivamente para pruebas.
 En PowerShell, antes de construir:
 
 ```powershell
-$env:APP_VERSION = "0.1.0"
+$env:APP_VERSION = "0.1.2"
 $env:VCS_REF = git rev-parse HEAD
 $env:BUILD_DATE = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
-$env:IMAGE_TAG = "0.1.0-$($env:VCS_REF.Substring(0,12))"
+$env:IMAGE_TAG = "0.1.2-$($env:VCS_REF.Substring(0,12))"
 docker compose build --pull app
 ```
 
@@ -61,6 +74,23 @@ docker image inspect "patryoga:$env:IMAGE_TAG" --format '{{json .Config.Labels}}
 
 La imagen debe informar origen, versión, revisión y fecha, y ejecutar como el
 usuario no privilegiado `nextjs`.
+
+## Cierre operacional de fase 2
+
+- La imagen `0.1.2` quedó saludable.
+- Los cinco casos públicos de autenticación y headers pasaron.
+- Compose recreó `db` por drift de configuración anterior, conservando volumen
+  y datos; el backup ya había sido validado y restaurado temporalmente.
+- La aplicación se recreó después de forma aislada y `db` permaneció estable.
+- La ACL de `.env` quedó restringida. La carpeta de backups no pudo ajustarse
+  por propiedad/permisos de Windows y necesita UAC/administrador.
+- El backup externo cifrado no se implementó porque todavía falta elegir el
+  destino y la política de retención.
+
+La recreación de `db` no es un procedimiento de actualización normal. Antes de
+aceptarla, revisar drift de Compose, comprobar el volumen y tener un backup
+restaurable. Nunca revelar rutas, hashes, propietarios o credenciales en el
+registro de despliegue.
 
 ## Publicación actual con Tailscale
 
