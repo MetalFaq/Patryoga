@@ -78,6 +78,41 @@ Variables requeridas:
 La cookie de prueba existe solamente en el proceso de la suite. No hay un modo
 de bypass ni una credencial fija dentro de la aplicacion.
 
+## Seguridad de fase 2
+
+Las pruebas unitarias del limitador no necesitan servicios:
+
+```bash
+node --test tests/security-phase2.test.mjs
+```
+
+La integración debe ejecutarse sólo contra una pila Compose aislada. Requiere
+`RUN_SECURITY_PHASE2_INTEGRATION=1`, `COMPOSE_PROJECT_NAME`, `BASE_URL`,
+`APP_DB_USER`, `APP_DB_PASSWORD` y las mismas variables ficticias usadas para
+levantar esa pila. Comprueba:
+
+- límites separados para Auth.js y API de negocio, respuesta `429`,
+  `Retry-After` y recuperación al vencer la ventana;
+- exclusión de `/api/health` del limitador;
+- dos ejecuciones idempotentes de migraciones;
+- rol runtime sin superuser, `CREATEDB`, `CREATEROLE`, herencia,
+  replicación ni `BYPASSRLS`;
+- DML y secuencias permitidos, pero DDL, creación de roles y lectura de
+  `schema_migrations` denegados.
+
+El limitador es intencionalmente local al proceso para el piloto de una sola
+instancia. Su mapa tiene TTL y cardinalidad acotada; cuando se llena, nuevas
+direcciones comparten un bucket de overflow que falla cerrado. No coordina
+límites entre réplicas: un despliegue multi-instancia debe reemplazarlo por un
+almacén compartido y atómico.
+
+`X-Forwarded-For`/`X-Real-IP` se consideran confiables únicamente porque
+Compose publica la app en loopback y Tailscale Funnel es el único proxy
+externo. Si la app se expone directamente o detrás de otro proxy, primero debe
+redefinirse esa frontera de confianza. Sin una IP válida se usa un bucket
+compartido `unidentified`, evitando que headers arbitrarios hagan crecer la
+memoria sin límite.
+
 La prueba de solicitud inválida compara el estado completo antes y después,
 por lo que detecta escrituras parciales. La prueba de 404 verifica que la
 clase válida no haya sido alterada por una solicitud dirigida a una clase
