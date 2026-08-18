@@ -49,6 +49,10 @@ $env:IMAGE_TAG = "0.1.0-$($env:VCS_REF.Substring(0,12))"
 docker compose build --pull app
 ```
 
+Después de validar la imagen, guardar el mismo `IMAGE_TAG` en el `.env` local
+del host. Así los próximos `docker compose up -d` conservan la versión aprobada
+en lugar de volver implícitamente a `patryoga:local`.
+
 Comprobar las etiquetas sin revelar variables de entorno:
 
 ```powershell
