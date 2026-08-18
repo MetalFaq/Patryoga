@@ -25,6 +25,26 @@ garantizada.
 Un resultado de `npm audit` con cero hallazgos no equivale a una auditoría
 integral, pentest ni garantía frente a vulnerabilidades todavía no publicadas.
 
+## Estado de seguridad del piloto
+
+El acceso HTTPS con Google fue probado correctamente. La aplicación falla
+cerrado, exige correo verificado y allowlist; Funnel sólo reenvía la web local,
+PostgreSQL no está publicado, el contenedor de la app no es privilegiado y
+Windows mantiene firewall y Defender activos. Por lo tanto, OAuth no es un
+bloqueante P0 del piloto.
+
+Las prioridades P1 son reducir privilegios del rol runtime de PostgreSQL,
+restringir ACL de `.env` y backups, automatizar copias cifradas externas,
+incorporar rate limiting y headers de navegador, separar salud pública de
+readiness, agregar observabilidad y escanear la imagen completa. También debe
+resolverse la dependencia de Docker Desktop respecto de la sesión Windows.
+
+Como defensa en profundidad quedan branch protection/Dependabot, pines por
+SHA/digest, seguimiento de Auth.js beta y sesiones, hardening adicional de
+contenedores, límites de payload/timeout/Origin y la verificación de BitLocker y
+políticas de la tailnet. El detalle y la evidencia se mantienen en
+`docs/security-audit-2026-08-17.md`.
+
 ## Señales de adopción a registrar
 
 Durante el piloto conviene anotar, sin agregar telemetría invasiva:
@@ -60,8 +80,11 @@ La inversión en dominio y alojamiento definitivo tiene sentido cuando:
 ### 2. Endurecer operación
 
 - Automatizar backups cifrados con retención y copia fuera del equipo.
-- Incorporar logs estructurados, IDs de solicitud, métricas y alertas de salud.
-- Agregar rate limiting y auditoría de acciones administrativas.
+- Restringir ACL locales y separar roles PostgreSQL de migración y runtime.
+- Incorporar logs estructurados, rotación, IDs de solicitud, métricas y alertas.
+- Agregar rate limiting, headers de seguridad y auditoría administrativa.
+- Separar salud pública de readiness interna.
+- Escanear dependencias npm e imagen completa en CI.
 - Establecer actualización mensual de dependencias e imagen base.
 
 ### 3. Elegir alojamiento
@@ -81,6 +104,8 @@ primero con el hostname del proveedor y conectar un dominio propio después.
 - Configurar DNS/proxy, HTTPS y el callback exacto de Google.
 - Actualizar `AUTH_URL`, recrear sólo la app y validar teléfono/escritorio.
 - Mantener el Funnel actual únicamente como contingencia durante el corte.
+- Retirar callbacks viejos de Quick Tunnel después de confirmar que ya no se
+  usan; conservar `localhost` para desarrollo.
 
 ### 5. Migrar datos y cortar servicio
 

@@ -1,18 +1,24 @@
-# Auditoría de dependencias — 17 de agosto de 2026
+# Auditoría de seguridad — 17 de agosto de 2026
 
-## Resultado final
+## Resultado ejecutivo
+
+No quedó un hallazgo P0 que impida el piloto. El callback de Tailscale está
+registrado en Google y el inicio de sesión HTTPS real fue validado.
 
 - `npm audit`: 0 vulnerabilidades conocidas.
 - `npm audit --omit=dev`: 0 vulnerabilidades productivas conocidas.
-- Next.js se actualizó de 15.5.22 a 16.3.1 para retirar las alertas que
-  alcanzaban la imagen productiva.
-- No se usó `npm audit fix --force`.
-- La imagen operacional se construyó con etiquetas OCI de origen, versión,
-  revisión y fecha, y ejecuta como usuario no privilegiado.
-- PostgreSQL no publica puertos al host; la exposición pública llega sólo a la
-  aplicación mediante Tailscale Funnel.
+- Funnel publica únicamente `/` hacia la aplicación en loopback.
+- PostgreSQL no publica puertos al host.
+- La aplicación ejecuta como usuario no privilegiado y sin modo `privileged`.
+- La autenticación falla cerrado, exige `email_verified` y compara una allowlist.
+- El repositorio público es intencional y tiene secret scanning y push
+  protection habilitados.
+- Firewall de Windows y Microsoft Defender están activos.
 
-## Hallazgos iniciales
+Este resultado no equivale a un pentest ni garantiza que no existan
+vulnerabilidades todavía no publicadas.
+
+## Hallazgos npm iniciales y resolución
 
 La primera consulta detectó seis vulnerabilidades altas y ninguna crítica:
 
@@ -34,26 +40,60 @@ Referencias de los avisos reportados por npm:
   GHSA-fxqj-rqcc-2cmp y GHSA-r28c-9q8g-f849.
 - `sharp`: GHSA-f88m-g3jw-g9cj.
 
+Next.js se actualizó de 15.5.22 a 16.3.1. No se usó
+`npm audit fix --force`. La imagen operacional quedó identificada mediante
+etiquetas OCI de origen, versión, revisión y fecha.
+
+## P1 — remediar durante el piloto
+
+| Hallazgo | Riesgo | Recomendación |
+| --- | --- | --- |
+| No hay rate limiting | Tráfico abusivo puede consumir recursos o presionar login/API | Limitar por IP y ruta; evaluar protección perimetral antes de producción |
+| `/api/health` es público y ejecuta `SELECT 1` | Cada solicitud pública genera trabajo contra PostgreSQL | Separar salud superficial pública de readiness interna y aplicar límites |
+| El rol runtime de PostgreSQL es superusuario | Una inyección o compromiso de app tendría privilegios excesivos | Crear rol de aplicación sin superuser y rol separado para migraciones |
+| ACL local de `.env` y backups demasiado amplia | Otros usuarios o procesos locales podrían leer secretos y datos | Restringir permisos al usuario operador y cuentas de servicio necesarias |
+| Backups sólo locales y manuales | Falla o pérdida del equipo puede eliminar servicio y respaldo | Automatizar copia cifrada fuera del host, retención y restauraciones periódicas |
+| Faltan headers CSP, X-Frame-Options, HSTS, nosniff, Referrer-Policy y Permissions-Policy | Menor defensa del navegador frente a inyección, framing y fuga de contexto | Definirlos en Next.js/proxy y verificar login/callback antes de exigirlos |
+| Logs sin rotación, request IDs, métricas ni alertas | Diagnóstico tardío, disco creciente y poca correlación de incidentes | Agregar rotación, IDs, métricas de salud y alertas sin datos personales |
+| Docker Desktop depende de la sesión Windows | Cerrar sesión o reiniciar puede dejar el servicio fuera de línea | Documentar recuperación y migrar a servicio/host dedicado después de adopción |
+| No se escanearon CVE del sistema operativo de la imagen | `npm audit` no cubre Alpine, Node ni binarios nativos | Incorporar escaneo de imagen en CI y revisar el digest de la imagen base |
+
+## P2 — defensa en profundidad o verificación pendiente
+
+- Habilitar y comprobar branch protection y actualizaciones Dependabot.
+- Fijar GitHub Actions por SHA e imágenes Docker por digest, con renovación
+  planificada.
+- Seguir la madurez de Auth.js beta, revisar duración/rotación de sesión y
+  planificar una versión estable.
+- Endurecer contenedores con filesystem de sólo lectura, capabilities mínimas,
+  límites de CPU/memoria y perfiles adecuados.
+- Limitar tamaño de payload, definir timeouts y validar política de `Origin` en
+  escrituras sensibles.
+- Verificar BitLocker y las ACL/políticas de la tailnet; no se consideran
+  controles confirmados todavía.
+
+## OAuth y callbacks
+
+- Conservar el callback de `localhost` para desarrollo.
+- Mantener el callback estable de Tailscale mientras dure el piloto.
+- Los callbacks antiguos de Quick Tunnel deben retirarse sólo después de
+  confirmar que ninguna prueba o configuración activa todavía los usa.
+- Cada origen nuevo requiere coincidencia exacta entre `AUTH_URL` y la URI de
+  redireccionamiento autorizada en Google.
+
+No guardar hostnames, correos permitidos, IDs del cliente ni secretos en este
+documento.
+
 ## Control continuo
 
-El workflow `.github/workflows/ci.yml` vuelve a ejecutar `npm audit` y bloquea
-la validación ante vulnerabilidades altas o críticas. Un resultado limpio sólo
-representa la base de avisos disponible en el momento de cada ejecución.
+El workflow `.github/workflows/ci.yml` ejecuta `npm audit` y bloquea la
+validación ante vulnerabilidades altas o críticas. Además:
 
-## Alcance y riesgo residual
+1. revisar alertas y dependencias por lo menos una vez al mes;
+2. escanear la imagen completa después de cada actualización de Node/Alpine;
+3. comprobar acceso público, OAuth, firewall y puertos tras cambios de red;
+4. verificar backups y restauraciones sin imprimir datos ni credenciales;
+5. registrar remediaciones P1/P2 con evidencia y fecha.
 
-Esta revisión cubre avisos npm y controles básicos del despliegue. No es un
-pentest, un análisis estático integral ni un escaneo del sistema Windows, la
-imagen, Google o Tailscale.
-
-Durante el piloto también deben mantenerse:
-
-- Google con verificación en dos pasos y lista mínima de cuentas autorizadas;
-- Windows actualizado, bloqueado cuando no se usa y sin suspensión mientras
-  presta servicio;
-- secretos y backups fuera de Git;
-- revisión periódica de CI, logs y nuevas alertas;
-- PostgreSQL sin puerto público y sin uso de `docker compose down -v`.
-
-Los riesgos operativos y controles pendientes están en
+Los riesgos operativos y el roadmap están en
 `docs/pilot-risks-and-roadmap.md`.
